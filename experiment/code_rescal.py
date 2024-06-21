@@ -5,12 +5,11 @@ from pykeen.triples import TriplesFactory
 
 # Define a small set of triples for the dummy knowledge graph
 triples = [
-    ('Alice', 'likes', 'IceCream'),
-    ('Bob', 'likes', 'IceCream'),
-    ('Alice', 'knows', 'Bob'),
-    ('Bob', 'knows', 'Charlie'),
-    ('Charlie', 'likes', 'Pizza'),
-    ('Charlie', 'dislikes', 'IceCream'),
+    ('Alice', 'likes', 'Bob'),
+    ('Bob', 'dislikes', 'Charlie'),
+    ('Charlie', 'knows', 'Alice'),
+    ('David', 'likes', 'Eve'),
+    ('Eve', 'dislikes', 'Bob'),
 ]
 
 # generate a KG representation using netwrokx
