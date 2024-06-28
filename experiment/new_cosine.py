@@ -93,14 +93,6 @@ relation_embeddings = result.relation_representations[0](
 
 # Create a simple knowledge graph
 G = nx.Graph()
-# nodes = [(0, {'feature': [0.1, 0.2]}),
-#         (1, {'feature': [0.3, 0.4]}),
-#         (2, {'feature': [0.5, 0.6]}),
-#         (3, {'feature': [0.7, 0.8]}),
-#         (4, {'feature': [0.9, 1.0]}),
-#         (5, {'feature': [1.1, 1.2]}),
-#         (6, {'feature': [0.34688088, 0.42952386]})]
-# edges = [(0, 1), (0, 2), (0, 3), (0, 4), (1, 2), (3,6)]
 
 entities = list(triples_factory.entity_to_id.keys())
 entity_to_id = {entity: idx for idx, entity in enumerate(entities)}
@@ -182,19 +174,28 @@ class Generator(nn.Module):
 
 ##################################################cls
 embedding_dim = entity_embeddings.shape[1]
-# generator = torch.load("generator_model.pth")
 generator = torch.load("generator_model.pth")
 
 
 # Generate a new node if the graph is incomplete
 # is_incomplete = True  # Assuming the graph is incomplete for demonstration
 if is_incomplete:
-    z = torch.randn(1, embedding_dim)          # This is the problem now as z should be neighbouring node embeddings (the latent space)
-    generated_feature = generator(z).detach().numpy().flatten()
-    new_node = (len(nodes), {'feature': generated_feature})
+    # z = torch.randn(1, embedding_dim)    # This is the problem now as z should be neighbouring node embeddings (the latent space)
+    # generated_feature = generator(z).detach().numpy().flatten()
 
-    print("Generated Node Feature:")
-    print(generated_feature)
+    # Use the embeddings of all sparse nodes as input
+    sparse_node_embeddings = np.array(
+        [nodes[sparse_node][1]['feature'] for sparse_node in sparse_nodes])
+
+    # Calculate the mean of the sparse node embeddings
+    mean_sparse_node_embedding = np.mean(sparse_node_embeddings, axis=0)
+    mean_sparse_node_embedding_tensor = torch.tensor(
+        mean_sparse_node_embedding, dtype=torch.float32).unsqueeze(0)
+
+    generated_feature = generator(
+        mean_sparse_node_embedding_tensor).detach().numpy().flatten()
+
+    new_node = (len(nodes), {'feature': generated_feature})
 
     # Create a NetworkX graph
     G = nx.Graph()
