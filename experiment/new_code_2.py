@@ -384,6 +384,10 @@ if is_incomplete:
     
     G.add_edge(new_node[0], most_similar_node)
 
+    # Retrieve the original representation
+    original_entity = entities[most_similar_node]
+    print("Original Entity Label:", original_entity)
+
     print("Updated Node Features and Graph:")
     node_features = np.array([data['feature']
                             for _, data in G.nodes(data=True)])
