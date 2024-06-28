@@ -10,7 +10,7 @@ import ast
 
 # Define a small set of triples for the dummy knowledge graph
 triples = []
-file_name = "Capstone-main/experiment/triples.txt"
+file_name = "triples.txt"
 
 with open(file_name, 'r') as file:
 
@@ -69,18 +69,30 @@ if training is None:
     exit(1)
 
 # Define the RESCAL model and train it using the pipeline
-result = pipeline(
-    model='RESCAL',
-    training=training,
-    testing=testing,
-    training_kwargs=dict(num_epochs=100, batch_size=2),
-    optimizer_kwargs=dict(lr=0.01),
-)
+# result = pipeline(
+#     model='RESCAL',
+#     training=training,
+#     testing=testing,
+#     training_kwargs=dict(num_epochs=100, batch_size=2),
+#     optimizer_kwargs=dict(lr=0.01),
+# )
 
-# Extract the entity and relation embeddings
-entity_embeddings = result.model.entity_representations[0](
+# # save the RESCAL embedding model
+# torch.save(result.model, 'rescal_model.pth')
+
+# # Extract the entity and relation embeddings
+# entity_embeddings = result.model.entity_representations[0](
+#     indices=None).cpu().detach().numpy()
+# relation_embeddings = result.model.relation_representations[0](
+#     indices=None).cpu().detach().numpy()
+
+
+# For saved RESCAL model 
+result = torch.load("rescal_model.pth")
+
+entity_embeddings = result.entity_representations[0](
     indices=None).cpu().detach().numpy()
-relation_embeddings = result.model.relation_representations[0](
+relation_embeddings = result.relation_representations[0](
     indices=None).cpu().detach().numpy()
 
 print("Entity Embeddings:\n", entity_embeddings)
@@ -249,15 +261,25 @@ for epoch in range(num_epochs):
         print(
             f"[Epoch {epoch}/{num_epochs}] [D loss: {d_loss.item():.4f}] [G loss: {g_loss.item():.4f}]")
 
+# Save the Generator model
+torch.save(generator, 'generator_model.pth')
+
+# Save the Discriminator model
+torch.save(discriminator, 'discriminator_model.pth')
+
 # Generate a new node if the graph is incomplete
-is_incomplete = True  # Assuming the graph is incomplete for demonstration
+# is_incomplete = True  # Assuming the graph is incomplete for demonstration
 if is_incomplete:
     z = torch.randn(1, embedding_dim)
+    print("z: ", z)
+    # z is the noise form which generator will generate the new node
     generated_feature = generator(z).detach().numpy().flatten()
     new_node = (len(nodes), {'feature': generated_feature})
 
     print("Generated Node Feature:")
     print(generated_feature)
+
+    print("New Node:", new_node)
 
     # Create a NetworkX graph
     G = nx.Graph()
@@ -270,6 +292,13 @@ if is_incomplete:
     # Optionally, connect the new node to an existing node (simple heuristic)
     existing_node = np.random.choice(G.nodes)
     G.add_edge(new_node[0], existing_node)
+
+    # existing node to which new node is connected
+    print("Existing Node:", existing_node)
+
+    # print the features of existing_node and new_node
+    print("Existing Node Feature:", G.nodes[existing_node]['feature'])
+    print("New Node Feature:", G.nodes[new_node[0]]['feature'])
 
     print("Updated Node Features and Graph:")
     node_features = np.array([data['feature']

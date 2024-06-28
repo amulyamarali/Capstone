@@ -12,7 +12,7 @@ triples = [
     ('Eve', 'dislikes', 'Bob'),
 ]
 
-# generate a KG representation using netwrokx
+# Generate a KG representation using NetworkX
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -38,7 +38,7 @@ print("Triples Array:\n", triples_array)
 triples_factory = TriplesFactory.from_labeled_triples(triples_array)
 print("Triples Factory:\n", triples_factory)
 
-# Split the triples into training, testing, and validation sets
+# Split the triples into training, testing, and validation sets with adjusted ratios
 training, testing, validation = triples_factory.split([0.8, 0.1, 0.1])
 
 # Define the RESCAL model and train it using the pipeline
