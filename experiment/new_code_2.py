@@ -328,9 +328,27 @@ torch.save(discriminator, 'discriminator_model_2.pth')
 # Generate a new node if the graph is incomplete
 if is_incomplete:
     generator.eval()  # Set generator to evaluation mode
-    z = torch.randn(1, embedding_dim)
-    print("z: ", z)
-    generated_feature = generator(z).detach().numpy().flatten()
+
+    # ***** The below 3 lines take random nose as input to generator for generating nodes ******
+    # this gave cosine similarity as 0.4 around as max value
+    # z = torch.randn(1, embedding_dim)
+    # print("z: ", z)
+    # generated_feature = generator(z).detach().numpy().flatten()
+
+    # ***** using the mean of all sparse nodes as inout to generator for generating node *****
+    # this method gave better results for cosine similarity 0.54 (highest)
+    # Use the embeddings of all sparse nodes as input
+    sparse_node_embeddings = np.array(
+        [nodes[sparse_node][1]['feature'] for sparse_node in sparse_nodes])
+
+    # Calculate the mean of the sparse node embeddings
+    mean_sparse_node_embedding = np.mean(sparse_node_embeddings, axis=0)
+    mean_sparse_node_embedding_tensor = torch.tensor(
+        mean_sparse_node_embedding, dtype=torch.float32).unsqueeze(0)
+
+    generated_feature = generator(
+        mean_sparse_node_embedding_tensor).detach().numpy().flatten()
+    new_node = (len(nodes), {'feature': generated_feature})
     new_node = (len(nodes), {'feature': generated_feature})
 
     print("Generated Node Feature:")
