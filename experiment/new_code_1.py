@@ -158,8 +158,6 @@ sparse_nodes = [n for n in sparse_nodes_indices]
 print("\nSparse nodes:", sparse_nodes)
 
 # Define GAN components
-
-
 class Generator(nn.Module):
     def __init__(self, embedding_dim):
         super(Generator, self).__init__()
@@ -194,7 +192,8 @@ class Discriminator(nn.Module):
 embedding_dim = entity_embeddings.shape[1]
 learning_rate = 0.0002
 batch_size = 2
-num_epochs = 1000
+num_epochs = 100
+print(embedding_dim)
 
 # Initialize generator and discriminator
 generator = Generator(embedding_dim)
@@ -246,7 +245,7 @@ for epoch in range(num_epochs):
     optimizer_G.step()
 
     # Print the progress
-    if epoch % 100 == 0:
+    if epoch % 10 == 0:
         print(
             f"[Epoch {epoch}/{num_epochs}] [D loss: {d_loss.item():.4f}] [G loss: {g_loss.item():.4f}]")
 
@@ -276,6 +275,7 @@ if is_incomplete:
     node_features = np.array([data['feature']
                             for _, data in G.nodes(data=True)])
     print(node_features)
+    
 
     nx.draw(G, with_labels=True)
     plt.show()
