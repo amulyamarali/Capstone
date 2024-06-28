@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import ast
 from sklearn.metrics.pairwise import cosine_similarity
 
+
 # Define a small set of triples for the dummy knowledge graph
 triples = []
 file_name = "new_triple.txt"
