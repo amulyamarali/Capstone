@@ -46,4 +46,4 @@ def pull_away_term(x):
     pt = x.matmul(x.t()) ** 2
     return (pt.sum() - pt.diag().sum()) / (len(x) * (len(x) - 1))
 
-   
+
