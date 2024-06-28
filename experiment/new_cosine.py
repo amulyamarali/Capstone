@@ -189,7 +189,7 @@ generator = torch.load("generator_model.pth")
 # Generate a new node if the graph is incomplete
 # is_incomplete = True  # Assuming the graph is incomplete for demonstration
 if is_incomplete:
-    z = torch.randn(1, embedding_dim)
+    z = torch.randn(1, embedding_dim)          # This is the problem now as z should be neighbouring node embeddings (the latent space)
     generated_feature = generator(z).detach().numpy().flatten()
     new_node = (len(nodes), {'feature': generated_feature})
 
@@ -201,8 +201,6 @@ if is_incomplete:
     G.add_nodes_from(nodes)
     G.add_edges_from(edges)
 
-    # # Add new node to the graph
-    G.add_node(new_node[0], feature=new_node[1]['feature'])
 
     existing_node_features = np.array(
         [data['feature'] for _, data in G.nodes(data=True)])
@@ -210,8 +208,18 @@ if is_incomplete:
         [generated_feature], existing_node_features).flatten()
     most_similar_node = np.argmax(similarities)
 
-    print("Similarities:", similarities)
+    # print("Similarities:", similarities)
     print("most_similar node:", most_similar_node)
+
+    print("similarity of most_similar_node: ", similarities[most_similar_node])
+
+    # print the features of existing_node and new_node
+    print("Existing Node Feature:", G.nodes[most_similar_node]['feature'])
+
+    # # Add new node to the graph
+    G.add_node(new_node[0], feature=new_node[1]['feature'])
+
+    print("New Node Feature:", G.nodes[new_node[0]]['feature'])
     
     G.add_edge(new_node[0], most_similar_node)
 
