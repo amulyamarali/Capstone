@@ -45,11 +45,11 @@ plt.show()
 
 # Convert the list of triples to a NumPy array
 triples_array = np.array(triples)
-print("Triples Array:\n", triples_array)
+# print("Triples Array:\n", triples_array)
 
 # Create a TriplesFactory from the triples
 triples_factory = TriplesFactory.from_labeled_triples(triples_array)
-print("Triples Factory:\n", triples_factory)
+# print("Triples Factory:\n", triples_factory)
 
 # Function to safely split triples and handle errors
 
@@ -88,8 +88,8 @@ entity_embeddings = result.entity_representations[0](
 relation_embeddings = result.relation_representations[0](
     indices=None).cpu().detach().numpy()
 
-print("Entity Embeddings:\n", entity_embeddings)
-print("Relation Embeddings:\n", relation_embeddings)
+# print("Entity Embeddings:\n", entity_embeddings)
+# print("Relation Embeddings:\n", relation_embeddings)
 
 # Create a simple knowledge graph
 G = nx.Graph()
@@ -113,8 +113,8 @@ nodes = [(entity_to_id[entity], {
 edges = [(entity_to_id[head], entity_to_id[tail]) for head, _, tail in triples]
 
 # Print nodes and edges
-print("Nodes:\n", nodes, len(nodes))
-print("Edges:\n", edges, len(edges))
+# print("Nodes:\n", nodes, len(nodes))
+# print("Edges:\n", edges, len(edges))
 
 G.add_nodes_from(nodes)
 G.add_edges_from(edges)
@@ -180,7 +180,7 @@ class Generator(nn.Module):
         return self.fc(noise)
 
 
-##################################################
+##################################################cls
 embedding_dim = entity_embeddings.shape[1]
 # generator = torch.load("generator_model.pth")
 generator = torch.load("generator_model.pth")
