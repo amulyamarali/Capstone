@@ -189,8 +189,20 @@ generator = torch.load("generator_model.pth")
 # Generate a new node if the graph is incomplete
 # is_incomplete = True  # Assuming the graph is incomplete for demonstration
 if is_incomplete:
-    z = torch.randn(1, embedding_dim)          # This is the problem now as z should be neighbouring node embeddings (the latent space)
-    generated_feature = generator(z).detach().numpy().flatten()
+    # z = torch.randn(1, embedding_dim)          # This is the problem now as z should be neighbouring node embeddings (the latent space)
+    # generated_feature = generator(z).detach().numpy().flatten()
+    
+    # Use the embeddings of all sparse nodes as input
+    sparse_node_embeddings = np.array(
+        [nodes[sparse_node][1]['feature'] for sparse_node in sparse_nodes])
+
+    # Calculate the mean of the sparse node embeddings
+    mean_sparse_node_embedding = np.mean(sparse_node_embeddings, axis=0)
+    mean_sparse_node_embedding_tensor = torch.tensor(
+        mean_sparse_node_embedding, dtype=torch.float32).unsqueeze(0)
+
+    generated_feature = generator(
+        mean_sparse_node_embedding_tensor).detach().numpy().flatten()
     new_node = (len(nodes), {'feature': generated_feature})
 
     print("Generated Node Feature:")
