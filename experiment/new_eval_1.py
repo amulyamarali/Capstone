@@ -7,6 +7,7 @@ from pykeen.triples import TriplesFactory
 import networkx as nx
 import matplotlib.pyplot as plt
 import ast
+from sklearn.metrics.pairwise import cosine_similarity
 
 # Define a small set of triples for the dummy knowledge graph
 triples = []
@@ -77,7 +78,9 @@ if training is None:
 #     optimizer_kwargs=dict(lr=0.01),
 # )
 
-result = torch.load("rescal_model.pth")
+# result = torch.load("rescal_model.pth")
+result = torch.load("rescal_model.pth",
+                    map_location=torch.device('cpu'))
 
 # Extract the entity and relation embeddings
 entity_embeddings = result.entity_representations[0](
@@ -159,9 +162,27 @@ sparse_nodes = [n for n in sparse_nodes_indices]
 
 print("\nSparse nodes:", sparse_nodes)
 
+
+# Define the Generator class
+class Generator(nn.Module):
+    def __init__(self, embedding_dim):
+        super(Generator, self).__init__()
+        self.embedding_dim = embedding_dim
+        self.fc = nn.Sequential(
+            nn.Linear(embedding_dim, 128),
+            nn.ReLU(),
+            # output same dimension as embedding_dim
+            nn.Linear(128, embedding_dim)
+        )
+
+    def forward(self, noise):
+        return self.fc(noise)
+
 ##################################################
 embedding_dim = entity_embeddings.shape[1]
+# generator = torch.load("generator_model.pth")
 generator = torch.load("generator_model.pth")
+
 
 
 # Generate a new node if the graph is incomplete
@@ -181,16 +202,14 @@ if is_incomplete:
 
     # Add new node to the graph
     G.add_node(new_node[0], feature=new_node[1]['feature'])
+    existing_node = random
 
-    # Optionally, connect the new node to an existing node (simple heuristic)
-    existing_node = np.random.choice(G.nodes)
-    G.add_edge(new_node[0], existing_node)
+    G.add_edge(new_node[0], most_similar_node)
 
     print("Updated Node Features and Graph:")
     node_features = np.array([data['feature']
                             for _, data in G.nodes(data=True)])
     print(node_features)
     
-
     nx.draw(G, with_labels=True)
     plt.show()
