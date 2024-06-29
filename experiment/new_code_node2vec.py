@@ -12,23 +12,20 @@ from torch.nn.parameter import Parameter
 from torch import nn
 from torch.nn import functional as F
 from torch.autograd import Variable
+from node2vec import Node2Vec
 
 # Assuming LinearWeightNorm is defined in functional module
 from functional import LinearWeightNorm
-
 
 # Define a small set of triples for the dummy knowledge graph
 triples = []
 file_name = "triples.txt"
 
 with open(file_name, 'r') as file:
-
     # Read the contents of the file
     file_content = file.read()
-
     # Convert the string representation of the list back to an actual list
     new_data = ast.literal_eval(file_content)
-
     # Append the new data to the existing list
     if isinstance(new_data, list):
         triples.extend(new_data)
@@ -51,71 +48,36 @@ edge_labels = nx.get_edge_attributes(G, 'label')
 nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
 plt.show()
 
-# Convert the list of triples to a NumPy array
-triples_array = np.array(triples)
-print("Triples Array:\n", triples_array)
+# Generate node embeddings using Node2Vec
+node2vec = Node2Vec(G, dimensions=64, walk_length=30, num_walks=200, workers=4)
+node2vec_model = node2vec.fit(window=10, min_count=1)
 
-# Create a TriplesFactory from the triples
-triples_factory = TriplesFactory.from_labeled_triples(triples_array)
-print("Triples Factory:\n", triples_factory)
-
-# Function to safely split triples and handle errors
+# Extract the node embeddings
+node_embeddings = {str(node): node2vec_model.wv[str(node)] for node in G.nodes()}
 
 
-def safe_split(triples_factory, ratios):
-    try:
-        training, testing = triples_factory.split(ratios)
-        return training, testing
-    except ValueError as e:
-        print("Error during split:", e)
-        return None, None
 
-
-# Attempt to split the triples into training and testing sets
-training, testing = safe_split(triples_factory, [0.8, 0.2])
-if training is None:
-    print("Failed to split triples. Exiting.")
-    exit(1)
-
-# Define the RESCAL model and train it using the pipeline
-# result = pipeline(
-#     model='RESCAL',
-#     training=training,
-#     testing=testing,
-#     training_kwargs=dict(num_epochs=100, batch_size=2),
-#     optimizer_kwargs=dict(lr=0.01),
-# )
-
-# # save the RESCAL embedding model
-# torch.save(result.model, 'rescal_model.pth')
-
-# # Extract the entity and relation embeddings
-# entity_embeddings = result.model.entity_representations[0](
-#     indices=None).cpu().detach().numpy()
-# relation_embeddings = result.model.relation_representations[0](
-#     indices=None).cpu().detach().numpy()
-
-
-# For saved RESCAL model 
-result = torch.load("rescal_model.pth")
-
-entity_embeddings = result.entity_representations[0](
-    indices=None).cpu().detach().numpy()
-relation_embeddings = result.relation_representations[0](
-    indices=None).cpu().detach().numpy()
-
-print("Entity Embeddings:\n", entity_embeddings)
-print("Relation Embeddings:\n", relation_embeddings)
-
-# Create a simple knowledge graph
+# Print node embeddings
+# for node, embedding in node_embeddings.items():
+#     print(f"Node: {node}, Embedding: {embedding}")
 G = nx.Graph()
 
+# Convert the list of triples to a NumPy array
+triples_array = np.array(triples)
+# Create a TriplesFactory from the triples
+triples_factory = TriplesFactory.from_labeled_triples(triples_array)
+
 entities = list(triples_factory.entity_to_id.keys())
+
 entity_to_id = {entity: idx for idx, entity in enumerate(entities)}
+
+# # Generate the nodes list
+# nodes = [(entity_to_id[entity], {
+#         'feature': node_embeddings[entity_to_id[entity]].tolist()}) for entity in entities]
 
 # Generate the nodes list
 nodes = [(entity_to_id[entity], {
-        'feature': entity_embeddings[entity_to_id[entity]].tolist()}) for entity in entities]
+        'feature': node_embeddings[str(entity)].tolist()}) for entity in entities]
 
 # Generate the edges list
 edges = [(entity_to_id[head], entity_to_id[tail]) for head, _, tail in triples]
@@ -127,22 +89,19 @@ print("Edges:\n", edges, len(edges))
 G.add_nodes_from(nodes)
 G.add_edges_from(edges)
 
-# Extract node features
-node_features = np.array([data['feature'] for _, data in G.nodes(data=True)])
+# Extract node features for the graph
+node_features = np.array([embedding for embedding in node_embeddings.values()])
 
 print("Node Features:")
 print(node_features)
 nx.draw(G, with_labels=True)
 plt.show()
 
-###############################################
-
 def gini_index(array):
     array = np.sort(array)
     index = np.arange(1, array.shape[0] + 1)
     n = array.shape[0]
     return ((2 * np.sum(index * array)) / (n * np.sum(array))) - ((n + 1) / n)
-
 
 # Calculate the degree of each node
 degrees = np.array([G.degree(n) for n in G.nodes])
@@ -154,8 +113,6 @@ normalized_degrees = degrees / max_total_degree
 # Calculate the Gini index
 gini = gini_index(degrees)
 print("Gini Index:", gini)
-
-################################################
 
 # Threshold for Gini index to determine sparsity
 gini_threshold = 0.3  # This threshold can be adjusted
@@ -170,7 +127,6 @@ sparse_nodes = [n for n in sparse_nodes_indices]
 
 print("\nSparse nodes:", sparse_nodes)
 
-# Original Discriminator
 class OriginalDiscriminator(nn.Module):
     def __init__(self, input_dim=28 ** 2, output_dim=1):
         super(OriginalDiscriminator, self).__init__()
@@ -204,8 +160,6 @@ class OriginalDiscriminator(nn.Module):
             return x_f, self.sigmoid(self.final(x))  # Apply sigmoid here
         return self.sigmoid(self.final(x))  # Apply sigmoid here
 
-
-# Original Generator
 class OriginalGenerator(nn.Module):
     def __init__(self, z_dim, output_dim=28 ** 2):
         super(OriginalGenerator, self).__init__()
@@ -229,7 +183,6 @@ class OriginalGenerator(nn.Module):
         x = F.tanh(self.fc3(x))
         return x
 
-# New Generator using OriginalGenerator layers
 class Generator(nn.Module):
     def __init__(self, embedding_dim):
         super(Generator, self).__init__()
@@ -239,7 +192,6 @@ class Generator(nn.Module):
     def forward(self, noise):
         return self.original_generator(noise.size(0), noise.is_cuda)
 
-# New Discriminator using OriginalDiscriminator layers
 class Discriminator(nn.Module):
     def __init__(self, embedding_dim):
         super(Discriminator, self).__init__()
@@ -249,9 +201,8 @@ class Discriminator(nn.Module):
     def forward(self, embeddings):
         return self.original_discriminator(embeddings)
 
-
 # Hyperparameters
-embedding_dim = entity_embeddings.shape[1]
+embedding_dim = node_features.shape[1]
 learning_rate = 0.0002
 batch_size = 2
 num_epochs = 300
@@ -272,8 +223,8 @@ for epoch in range(num_epochs):
     optimizer_D.zero_grad()
 
     # Sample real data
-    real_samples = torch.tensor(entity_embeddings[np.random.randint(
-        0, entity_embeddings.shape[0], batch_size)], dtype=torch.float)
+    real_samples = torch.tensor(node_features[np.random.randint(
+        0, node_features.shape[0], batch_size)], dtype=torch.float)
     real_labels = torch.ones(batch_size, 1)
     fake_labels = torch.zeros(batch_size, 1)
 
@@ -312,24 +263,30 @@ for epoch in range(num_epochs):
             f"[Epoch {epoch}/{num_epochs}] [D loss: {d_loss.item():.4f}] [G loss: {g_loss.item():.4f}]")
 
 # Save the Generator model
-torch.save(generator, 'generator_model_2.pth')
+torch.save(generator, 'generator_model_node2vec.pth')
 
 # Save the Discriminator model
-torch.save(discriminator, 'discriminator_model_2.pth')
+torch.save(discriminator, 'discriminator_node2vec.pth')
 
 # Generate a new node if the graph is incomplete
 if is_incomplete:
     generator.eval()  # Set generator to evaluation mode
 
-    # ***** The below 3 lines take random nose as input to generator for generating nodes ******
-    # this gave cosine similarity as 0.4 around as max value
-    # z = torch.randn(1, embedding_dim)
-    # print("z: ", z)
-    # generated_feature = generator(z).detach().numpy().flatten()
+    # # Check if sparse nodes are present in node_embeddings
+    # sparse_node_embeddings = []
+    # for sparse_node in sparse_nodes:
+    #     sparse_node_key = str(sparse_node)
+    #     if sparse_node_key in node_embeddings:
+    #         sparse_node_embeddings.append(node_embeddings[sparse_node_key])
+    #     else:
+    #         print(f"Node {sparse_node} not found in node_embeddings.")
 
-    # ***** using the mean of all sparse nodes as inout to generator for generating node *****
-    # this method gave better results for cosine similarity 0.54 (highest)
-    # Use the embeddings of all sparse nodes as input
+    # if len(sparse_node_embeddings) == 0:
+    #     print("No sparse nodes found in node_embeddings. Exiting.")
+    #     exit(1)
+
+    # sparse_node_embeddings = np.array(sparse_node_embeddings)
+
     sparse_node_embeddings = np.array(
         [nodes[sparse_node][1]['feature'] for sparse_node in sparse_nodes])
 
@@ -340,51 +297,43 @@ if is_incomplete:
 
     generated_feature = generator(
         mean_sparse_node_embedding_tensor).detach().numpy().flatten()
-    new_node = (len(nodes), {'feature': generated_feature})
-    new_node = (len(nodes), {'feature': generated_feature})
+    new_node = (len(G.nodes), {'feature': generated_feature})
 
     print("Generated Node Feature:")
     print(generated_feature)
 
     print("New Node:", new_node)
 
-    # Create a NetworkX graph
-    G = nx.Graph()
-    G.add_nodes_from(nodes)
-    G.add_edges_from(edges)
 
     from sklearn.metrics.pairwise import cosine_similarity
 
     existing_node_features = np.array(
-        [data['feature'] for _, data in G.nodes(data=True)])
+        [data['feature'] for _, data in G.nodes(data=True)]
+    )
     similarities = cosine_similarity(
         [generated_feature], existing_node_features).flatten()
     most_similar_node = np.argmax(similarities)
 
-    # print("Similarities:", similarities)
     print("most_similar node:", most_similar_node)
-
     print("similarity of most_similar_node: ", similarities[most_similar_node])
-
-    # print the features of existing_node and new_node
-    print("Existing Node Feature:", G.nodes[most_similar_node]['feature'])
 
     # Add new node to the graph
     G.add_node(new_node[0], feature=new_node[1]['feature'])
 
-    print("New Node Feature:", G.nodes[new_node[0]]['feature'])
-    
+    # Add new edge based on the most similar node
     G.add_edge(new_node[0], most_similar_node)
 
-    # Retrieve the original representation
-    original_entity = entities[most_similar_node]
-    print("Original Entity Label:", original_entity)
+    # Retrieve the original representation (if available)
+    # original_entity = entities[most_similar_node] # Uncomment if `entities` is defined
+    # print("Original Entity Label:", original_entity) # Uncomment if `entities` is defined
 
     print("Updated Node Features and Graph:")
     node_features = np.array([data['feature']
-                            for _, data in G.nodes(data=True)])
+                              for _, data in G.nodes(data=True)])
     print(node_features)
 
     nx.draw(G, with_labels=True)
     plt.show()
+
+
 
