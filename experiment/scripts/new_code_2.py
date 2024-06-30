@@ -8,9 +8,18 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import ast
 
+from torch.nn.parameter import Parameter
+from torch import nn
+from torch.nn import functional as F
+from torch.autograd import Variable
+
+# Assuming LinearWeightNorm is defined in functional module
+from functional import LinearWeightNorm
+
+
 # Define a small set of triples for the dummy knowledge graph
 triples = []
-file_name = "triples.txt"
+file_name = "experiment\data\triples.txt"
 
 with open(file_name, 'r') as file:
 
@@ -88,7 +97,7 @@ if training is None:
 
 
 # For saved RESCAL model 
-result = torch.load("rescal_model.pth")
+result = torch.load("experiment\models\rescal_model.pth")
 
 entity_embeddings = result.entity_representations[0](
     indices=None).cpu().detach().numpy()
@@ -100,14 +109,6 @@ print("Relation Embeddings:\n", relation_embeddings)
 
 # Create a simple knowledge graph
 G = nx.Graph()
-# nodes = [(0, {'feature': [0.1, 0.2]}), 
-#         (1, {'feature': [0.3, 0.4]}), 
-#         (2, {'feature': [0.5, 0.6]}), 
-#         (3, {'feature': [0.7, 0.8]}), 
-#         (4, {'feature': [0.9, 1.0]}),
-#         (5, {'feature': [1.1, 1.2]}),
-#         (6, {'feature': [0.34688088, 0.42952386]})]
-# edges = [(0, 1), (0, 2), (0, 3), (0, 4), (1, 2), (3,6)]
 
 entities = list(triples_factory.entity_to_id.keys())
 entity_to_id = {entity: idx for idx, entity in enumerate(entities)}
@@ -169,42 +170,91 @@ sparse_nodes = [n for n in sparse_nodes_indices]
 
 print("\nSparse nodes:", sparse_nodes)
 
-# Define GAN components
+# Original Discriminator
+class OriginalDiscriminator(nn.Module):
+    def __init__(self, input_dim=28 ** 2, output_dim=1):
+        super(OriginalDiscriminator, self).__init__()
+        self.input_dim = input_dim
+        self.layers = torch.nn.ModuleList([
+            LinearWeightNorm(input_dim, 500),
+            LinearWeightNorm(500, 500),
+            LinearWeightNorm(500, 250),
+            LinearWeightNorm(250, 250),
+            LinearWeightNorm(250, 250)
+        ])
+        self.final = LinearWeightNorm(250, output_dim, weight_scale=1)
+        self.sigmoid = nn.Sigmoid()  # Add sigmoid layer
+
+    def forward(self, x, feature=False, cuda=False, first=False):
+        x = x.view(-1, self.input_dim)
+        noise = torch.randn(x.size()) * 0.05 if self.training else torch.Tensor([0])
+        if cuda:
+            noise = noise.cuda()
+        x = x + Variable(noise, requires_grad=False)
+        if first:
+            return self.layers[0](x)
+        for i in range(len(self.layers)):
+            m = self.layers[i]
+            x_f = F.elu(m(x))
+            noise = torch.randn(x_f.size()) * 0.5 if self.training else torch.Tensor([0])
+            if cuda:
+                noise = noise.cuda()
+            x = (x_f + Variable(noise, requires_grad=False))
+        if feature:
+            return x_f, self.sigmoid(self.final(x))  # Apply sigmoid here
+        return self.sigmoid(self.final(x))  # Apply sigmoid here
+
+
+# Original Generator
+class OriginalGenerator(nn.Module):
+    def __init__(self, z_dim, output_dim=28 ** 2):
+        super(OriginalGenerator, self).__init__()
+        self.z_dim = z_dim
+        self.fc1 = nn.Linear(z_dim, 500, bias=False)
+        self.bn1 = nn.BatchNorm1d(500, affine=False, eps=1e-6, momentum=0.5)
+        self.fc2 = nn.Linear(500, 500, bias=False)
+        self.bn2 = nn.BatchNorm1d(500, affine=False, eps=1e-6, momentum=0.5)
+        self.fc3 = LinearWeightNorm(500, output_dim, weight_scale=1)
+        self.bn1_b = Parameter(torch.zeros(500))
+        self.bn2_b = Parameter(torch.zeros(500))
+        nn.init.xavier_uniform_(self.fc1.weight)
+        nn.init.xavier_uniform_(self.fc2.weight)
+
+    def forward(self, batch_size, cuda=False, seed=-1):
+        x = Variable(torch.rand(batch_size, self.z_dim), requires_grad=False, volatile=not self.training)
+        if cuda:
+            x = x.cuda()
+        x = F.elu(self.bn1(self.fc1(x)) + self.bn1_b)
+        x = F.elu(self.bn2(self.fc2(x)) + self.bn2_b)
+        x = F.tanh(self.fc3(x))
+        return x
+
+# New Generator using OriginalGenerator layers
 class Generator(nn.Module):
     def __init__(self, embedding_dim):
         super(Generator, self).__init__()
         self.embedding_dim = embedding_dim
-        self.fc = nn.Sequential(
-            nn.Linear(embedding_dim, 128),
-            nn.ReLU(),
-            # output same dimension as embedding_dim
-            nn.Linear(128, embedding_dim)
-        )
+        self.original_generator = OriginalGenerator(embedding_dim, embedding_dim)
 
     def forward(self, noise):
-        return self.fc(noise)
+        return self.original_generator(noise.size(0), noise.is_cuda)
 
-
+# New Discriminator using OriginalDiscriminator layers
 class Discriminator(nn.Module):
     def __init__(self, embedding_dim):
         super(Discriminator, self).__init__()
         self.embedding_dim = embedding_dim
-        self.fc = nn.Sequential(
-            nn.Linear(embedding_dim, 128),  # input is embedding_dim
-            nn.ReLU(),
-            nn.Linear(128, 1),
-            nn.Sigmoid()
-        )
+        self.original_discriminator = OriginalDiscriminator(embedding_dim, 1)
 
     def forward(self, embeddings):
-        return self.fc(embeddings)
+        return self.original_discriminator(embeddings)
 
 
 # Hyperparameters
 embedding_dim = entity_embeddings.shape[1]
 learning_rate = 0.0002
 batch_size = 2
-num_epochs = 200
+num_epochs = 300
 print(embedding_dim)
 
 # Initialize generator and discriminator
@@ -262,18 +312,35 @@ for epoch in range(num_epochs):
             f"[Epoch {epoch}/{num_epochs}] [D loss: {d_loss.item():.4f}] [G loss: {g_loss.item():.4f}]")
 
 # Save the Generator model
-torch.save(generator, 'generator_model.pth')
+torch.save(generator, 'experiment\models\generator_model_2.pth')
 
 # Save the Discriminator model
-torch.save(discriminator, 'discriminator_model.pth')
+torch.save(discriminator, 'experiment\models\discriminator_model_2.pth')
 
 # Generate a new node if the graph is incomplete
-# is_incomplete = True  # Assuming the graph is incomplete for demonstration
 if is_incomplete:
-    z = torch.randn(1, embedding_dim)
-    print("z: ", z)
-    # z is the noise form which generator will generate the new node
-    generated_feature = generator(z).detach().numpy().flatten()
+    generator.eval()  # Set generator to evaluation mode
+
+    # ***** The below 3 lines take random nose as input to generator for generating nodes ******
+    # this gave cosine similarity as 0.4 around as max value
+    # z = torch.randn(1, embedding_dim)
+    # print("z: ", z)
+    # generated_feature = generator(z).detach().numpy().flatten()
+
+    # ***** using the mean of all sparse nodes as inout to generator for generating node *****
+    # this method gave better results for cosine similarity 0.54 (highest)
+    # Use the embeddings of all sparse nodes as input
+    sparse_node_embeddings = np.array(
+        [nodes[sparse_node][1]['feature'] for sparse_node in sparse_nodes])
+
+    # Calculate the mean of the sparse node embeddings
+    mean_sparse_node_embedding = np.mean(sparse_node_embeddings, axis=0)
+    mean_sparse_node_embedding_tensor = torch.tensor(
+        mean_sparse_node_embedding, dtype=torch.float32).unsqueeze(0)
+
+    generated_feature = generator(
+        mean_sparse_node_embedding_tensor).detach().numpy().flatten()
+    new_node = (len(nodes), {'feature': generated_feature})
     new_node = (len(nodes), {'feature': generated_feature})
 
     print("Generated Node Feature:")
@@ -286,25 +353,38 @@ if is_incomplete:
     G.add_nodes_from(nodes)
     G.add_edges_from(edges)
 
+    from sklearn.metrics.pairwise import cosine_similarity
+
+    existing_node_features = np.array(
+        [data['feature'] for _, data in G.nodes(data=True)])
+    similarities = cosine_similarity(
+        [generated_feature], existing_node_features).flatten()
+    most_similar_node = np.argmax(similarities)
+
+    # print("Similarities:", similarities)
+    print("most_similar node:", most_similar_node)
+
+    print("similarity of most_similar_node: ", similarities[most_similar_node])
+
+    # print the features of existing_node and new_node
+    print("Existing Node Feature:", G.nodes[most_similar_node]['feature'])
+
     # Add new node to the graph
     G.add_node(new_node[0], feature=new_node[1]['feature'])
 
-    # Optionally, connect the new node to an existing node (simple heuristic)
-    existing_node = np.random.choice(G.nodes)
-    G.add_edge(new_node[0], existing_node)
-
-    # existing node to which new node is connected
-    print("Existing Node:", existing_node)
-
-    # print the features of existing_node and new_node
-    print("Existing Node Feature:", G.nodes[existing_node]['feature'])
     print("New Node Feature:", G.nodes[new_node[0]]['feature'])
+    
+    G.add_edge(new_node[0], most_similar_node)
+
+    # Retrieve the original representation
+    original_entity = entities[most_similar_node]
+    print("Original Entity Label:", original_entity)
 
     print("Updated Node Features and Graph:")
     node_features = np.array([data['feature']
                             for _, data in G.nodes(data=True)])
     print(node_features)
-    
 
     nx.draw(G, with_labels=True)
     plt.show()
+

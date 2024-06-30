@@ -11,7 +11,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 # Define a small set of triples for the dummy knowledge graph
 triples = []
-file_name = "triples.txt"
+file_name = "experiment\data\triples.txt"
 
 with open(file_name, 'r') as file:
 
@@ -79,7 +79,7 @@ if training is None:
 # )
 
 # result = torch.load("rescal_model.pth")
-result = torch.load("rescal_model.pth",
+result = torch.load("experiment\models\rescal_model.pth",
                     map_location=torch.device('cpu'))
 
 # Extract the entity and relation embeddings
@@ -174,7 +174,7 @@ class Generator(nn.Module):
 
 ##################################################cls
 embedding_dim = entity_embeddings.shape[1]
-generator = torch.load("generator_model.pth")
+generator = torch.load("experiment\models\generator_model.pth")
 
 
 # Generate a new node if the graph is incomplete

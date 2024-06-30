@@ -14,7 +14,7 @@ from pykeen.pipeline import pipeline
 import ast
 
 triples = []
-file_name = "triples.txt"
+file_name = "experiment\data\triples.txt"
 
 with open(file_name, 'r') as file:
     file_content = file.read()
@@ -206,7 +206,7 @@ class Generator(nn.Module):
         return self.fc(noise)
 
 embedding_dim = entity_embeddings.shape[1]
-generator = torch.load("generator_model.pth").to(device)
+generator = torch.load("experiment\models\generator_model.pth").to(device)
 
 with torch.no_grad():
     model.eval()

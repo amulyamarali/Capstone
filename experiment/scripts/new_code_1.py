@@ -7,11 +7,10 @@ from pykeen.triples import TriplesFactory
 import networkx as nx
 import matplotlib.pyplot as plt
 import ast
-from sklearn.metrics.pairwise import cosine_similarity
 
 # Define a small set of triples for the dummy knowledge graph
 triples = []
-file_name = "triples.txt"
+file_name = "experiment\data\triples.txt"
 
 with open(file_name, 'r') as file:
 
@@ -78,11 +77,19 @@ if training is None:
 #     optimizer_kwargs=dict(lr=0.01),
 # )
 
-# result = torch.load("rescal_model.pth")
-result = torch.load("rescal_model.pth",
-                    map_location=torch.device('cpu'))
+# # save the RESCAL embedding model
+# torch.save(result.model, 'rescal_model.pth')
 
-# Extract the entity and relation embeddings
+# # Extract the entity and relation embeddings
+# entity_embeddings = result.model.entity_representations[0](
+#     indices=None).cpu().detach().numpy()
+# relation_embeddings = result.model.relation_representations[0](
+#     indices=None).cpu().detach().numpy()
+
+
+# For saved RESCAL model 
+result = torch.load("experiment\models\rescal_model.pth")
+
 entity_embeddings = result.entity_representations[0](
     indices=None).cpu().detach().numpy()
 relation_embeddings = result.relation_representations[0](
@@ -162,8 +169,7 @@ sparse_nodes = [n for n in sparse_nodes_indices]
 
 print("\nSparse nodes:", sparse_nodes)
 
-
-# Define the Generator class
+# Define GAN components
 class Generator(nn.Module):
     def __init__(self, embedding_dim):
         super(Generator, self).__init__()
@@ -178,40 +184,127 @@ class Generator(nn.Module):
     def forward(self, noise):
         return self.fc(noise)
 
-##################################################
+
+class Discriminator(nn.Module):
+    def __init__(self, embedding_dim):
+        super(Discriminator, self).__init__()
+        self.embedding_dim = embedding_dim
+        self.fc = nn.Sequential(
+            nn.Linear(embedding_dim, 128),  # input is embedding_dim
+            nn.ReLU(),
+            nn.Linear(128, 1),
+            nn.Sigmoid()
+        )
+
+    def forward(self, embeddings):
+        return self.fc(embeddings)
+
+
+# Hyperparameters
 embedding_dim = entity_embeddings.shape[1]
-# generator = torch.load("generator_model.pth")
-generator = torch.load("generator_model.pth")
+learning_rate = 0.0002
+batch_size = 2
+num_epochs = 200
+print(embedding_dim)
 
+# Initialize generator and discriminator
+generator = Generator(embedding_dim)
+discriminator = Discriminator(embedding_dim)
 
+# Loss function and optimizers
+adversarial_loss = nn.BCELoss()
+optimizer_G = optim.Adam(generator.parameters(), lr=learning_rate)
+optimizer_D = optim.Adam(discriminator.parameters(), lr=learning_rate)
+
+# Training
+for epoch in range(num_epochs):
+    # Train Discriminator
+    optimizer_D.zero_grad()
+
+    # Sample real data
+    real_samples = torch.tensor(entity_embeddings[np.random.randint(
+        0, entity_embeddings.shape[0], batch_size)], dtype=torch.float)
+    real_labels = torch.ones(batch_size, 1)
+    fake_labels = torch.zeros(batch_size, 1)
+
+    # Generate fake data
+    noise = torch.randn(batch_size, embedding_dim)
+    generated_samples = generator(noise)
+
+    # Discriminator loss
+    real_validity = discriminator(real_samples)
+    fake_validity = discriminator(generated_samples)
+
+    real_loss = adversarial_loss(real_validity, real_labels)
+    fake_loss = adversarial_loss(fake_validity, fake_labels)
+    d_loss = (real_loss + fake_loss) / 2
+
+    d_loss.backward()
+    optimizer_D.step()
+
+    # Train Generator
+    optimizer_G.zero_grad()
+
+    # Generate fake data
+    noise = torch.randn(batch_size, embedding_dim)
+    generated_samples = generator(noise)
+
+    # Generator loss
+    validity = discriminator(generated_samples)
+    g_loss = adversarial_loss(validity, real_labels)
+
+    g_loss.backward()
+    optimizer_G.step()
+
+    # Print the progress
+    if epoch % 10 == 0:
+        print(
+            f"[Epoch {epoch}/{num_epochs}] [D loss: {d_loss.item():.4f}] [G loss: {g_loss.item():.4f}]")
+
+# Save the Generator model
+torch.save(generator, 'experiment\models\generator_model.pth')
+
+# Save the Discriminator model
+torch.save(discriminator, 'experiment\models\discriminator_model.pth')
 
 # Generate a new node if the graph is incomplete
 # is_incomplete = True  # Assuming the graph is incomplete for demonstration
 if is_incomplete:
-    
     z = torch.randn(1, embedding_dim)
+    print("z: ", z)
+    # z is the noise form which generator will generate the new node
     generated_feature = generator(z).detach().numpy().flatten()
     new_node = (len(nodes), {'feature': generated_feature})
 
     print("Generated Node Feature:")
     print(generated_feature)
 
+    print("New Node:", new_node)
+
     # Create a NetworkX graph
     G = nx.Graph()
     G.add_nodes_from(nodes)
     G.add_edges_from(edges)
 
-    # choose an existing
-    existing_node = np.random.choice(G.nodes)
     # Add new node to the graph
     G.add_node(new_node[0], feature=new_node[1]['feature'])
 
+    # Optionally, connect the new node to an existing node (simple heuristic)
+    existing_node = np.random.choice(G.nodes)
     G.add_edge(new_node[0], existing_node)
+
+    # existing node to which new node is connected
+    print("Existing Node:", existing_node)
+
+    # print the features of existing_node and new_node
+    print("Existing Node Feature:", G.nodes[existing_node]['feature'])
+    print("New Node Feature:", G.nodes[new_node[0]]['feature'])
 
     print("Updated Node Features and Graph:")
     node_features = np.array([data['feature']
                             for _, data in G.nodes(data=True)])
     print(node_features)
     
+
     nx.draw(G, with_labels=True)
     plt.show()

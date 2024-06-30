@@ -20,7 +20,7 @@ from functional import LinearWeightNorm
 
 # Define a small set of triples for the dummy knowledge graph
 triples = []
-file_name = "triples.txt"
+file_name = "experiment\data\triples.txt"
 
 with open(file_name, 'r') as file:
     file_content = file.read()
@@ -64,7 +64,7 @@ if training is None:
     print("Failed to split triples. Exiting.")
     exit(1)
 
-result = torch.load("rescal_model.pth")
+result = torch.load("experiment\models\rescal_model.pth")
 entity_embeddings = result.entity_representations[0](
     indices=None).cpu().detach().numpy()
 relation_embeddings = result.relation_representations[0](
@@ -273,6 +273,7 @@ if is_incomplete:
 # Visualize or further process node embeddings as needed
 print("Node Embeddings:\n", embeddings)
 
+from sklearn.metrics.pairwise import cosine_similarity
 # Example of using node embeddings for similarity calculation
 similarities = cosine_similarity(embeddings, embeddings)
 print("Cosine Similarity Matrix:\n", similarities)

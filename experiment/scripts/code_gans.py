@@ -5,6 +5,7 @@ from pykeen.triples import TriplesFactory
 import networkx as nx
 import matplotlib.pyplot as plt
 
+
 # Define a small set of triples for the dummy knowledge graph
 triples = [
     ('Alice', 'likes', 'Bob'),

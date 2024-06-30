@@ -9,14 +9,10 @@ import matplotlib.pyplot as plt
 import ast
 from sklearn.metrics.pairwise import cosine_similarity
 
-from torch.nn.parameter import Parameter
-from torch import nn
-from torch.nn import functional as F
-from torch.autograd import Variable
 
 # Define a small set of triples for the dummy knowledge graph
 triples = []
-file_name = "triples.txt"
+file_name = "experiment\data\new_triple.txt"
 
 with open(file_name, 'r') as file:
 
@@ -50,11 +46,11 @@ plt.show()
 
 # Convert the list of triples to a NumPy array
 triples_array = np.array(triples)
-print("Triples Array:\n", triples_array)
+# print("Triples Array:\n", triples_array)
 
 # Create a TriplesFactory from the triples
 triples_factory = TriplesFactory.from_labeled_triples(triples_array)
-print("Triples Factory:\n", triples_factory)
+# print("Triples Factory:\n", triples_factory)
 
 # Function to safely split triples and handle errors
 
@@ -74,19 +70,38 @@ if training is None:
     print("Failed to split triples. Exiting.")
     exit(1)
 
-# For saved RESCAL model
-result = torch.load("rescal_model.pth", map_location=torch.device('cpu'))
+# Define the RESCAL model and train it using the pipeline
+# result = pipeline(
+#     model='RESCAL',
+#     training=training,
+#     testing=testing,
+#     training_kwargs=dict(num_epochs=100, batch_size=2),
+#     optimizer_kwargs=dict(lr=0.01),
+# )
 
+# result = torch.load("rescal_model.pth")
+result = torch.load("experiment\models\rescal_model.pth",
+                    map_location=torch.device('cpu'))
+
+# Extract the entity and relation embeddings
 entity_embeddings = result.entity_representations[0](
     indices=None).cpu().detach().numpy()
 relation_embeddings = result.relation_representations[0](
     indices=None).cpu().detach().numpy()
 
-print("Entity Embeddings:\n", entity_embeddings)
-print("Relation Embeddings:\n", relation_embeddings)
+# print("Entity Embeddings:\n", entity_embeddings)
+# print("Relation Embeddings:\n", relation_embeddings)
 
-
+# Create a simple knowledge graph
 G = nx.Graph()
+# nodes = [(0, {'feature': [0.1, 0.2]}),
+#         (1, {'feature': [0.3, 0.4]}),
+#         (2, {'feature': [0.5, 0.6]}),
+#         (3, {'feature': [0.7, 0.8]}),
+#         (4, {'feature': [0.9, 1.0]}),
+#         (5, {'feature': [1.1, 1.2]}),
+#         (6, {'feature': [0.34688088, 0.42952386]})]
+# edges = [(0, 1), (0, 2), (0, 3), (0, 4), (1, 2), (3,6)]
 
 entities = list(triples_factory.entity_to_id.keys())
 entity_to_id = {entity: idx for idx, entity in enumerate(entities)}
@@ -99,8 +114,8 @@ nodes = [(entity_to_id[entity], {
 edges = [(entity_to_id[head], entity_to_id[tail]) for head, _, tail in triples]
 
 # Print nodes and edges
-print("Nodes:\n", nodes, len(nodes))
-print("Edges:\n", edges, len(edges))
+# print("Nodes:\n", nodes, len(nodes))
+# print("Edges:\n", edges, len(edges))
 
 G.add_nodes_from(nodes)
 G.add_edges_from(edges)
@@ -114,6 +129,8 @@ nx.draw(G, with_labels=True)
 plt.show()
 
 ###############################################
+
+
 def gini_index(array):
     array = np.sort(array)
     index = np.arange(1, array.shape[0] + 1)
@@ -148,58 +165,34 @@ sparse_nodes = [n for n in sparse_nodes_indices]
 print("\nSparse nodes:", sparse_nodes)
 
 
-# Original Generator
-class OriginalGenerator(nn.Module):
-    def __init__(self, z_dim, output_dim=28 ** 2):
-        super(OriginalGenerator, self).__init__()
-        self.z_dim = z_dim
-        self.fc1 = nn.Linear(z_dim, 500, bias=False)
-        self.bn1 = nn.BatchNorm1d(500, affine=False, eps=1e-6, momentum=0.5)
-        self.fc2 = nn.Linear(500, 500, bias=False)
-        self.bn2 = nn.BatchNorm1d(500, affine=False, eps=1e-6, momentum=0.5)
-        self.fc3 = LinearWeightNorm(500, output_dim, weight_scale=1)
-        self.bn1_b = Parameter(torch.zeros(500))
-        self.bn2_b = Parameter(torch.zeros(500))
-        nn.init.xavier_uniform_(self.fc1.weight)
-        nn.init.xavier_uniform_(self.fc2.weight)
-
-    def forward(self, batch_size, cuda=False, seed=-1):
-        x = Variable(torch.rand(batch_size, self.z_dim),
-                    requires_grad=False, volatile=not self.training)
-        if cuda:
-            x = x.cuda()
-        x = F.elu(self.bn1(self.fc1(x)) + self.bn1_b)
-        x = F.elu(self.bn2(self.fc2(x)) + self.bn2_b)
-        x = F.tanh(self.fc3(x))
-        return x
-
-# New Generator using OriginalGenerator layers
+# Define the Generator class
 class Generator(nn.Module):
     def __init__(self, embedding_dim):
         super(Generator, self).__init__()
         self.embedding_dim = embedding_dim
-        self.original_generator = OriginalGenerator(
-            embedding_dim, embedding_dim)
+        self.fc = nn.Sequential(
+            nn.Linear(embedding_dim, 128),
+            nn.ReLU(),
+            # output same dimension as embedding_dim
+            nn.Linear(128, embedding_dim)
+        )
 
     def forward(self, noise):
-        return self.original_generator(noise.size(0), noise.is_cuda)
+        return self.fc(noise)
 
 
+##################################################cls
 embedding_dim = entity_embeddings.shape[1]
 # generator = torch.load("generator_model.pth")
-generator = torch.load("generator_model_2.pth")
+generator = torch.load("experiment\models\generator_model.pth")
 
 
-#  Generate a new node if the graph is incomplete
+# Generate a new node if the graph is incomplete
+# is_incomplete = True  # Assuming the graph is incomplete for demonstration
 if is_incomplete:
-    
-    generator.eval()  # Set generator to evaluation mode
-
-    # z = torch.randn(1, embedding_dim)
-    # print("z: ", z)
+    # z = torch.randn(1, embedding_dim)          # This is the problem now as z should be neighbouring node embeddings (the latent space)
     # generated_feature = generator(z).detach().numpy().flatten()
-    # new_node = (len(nodes), {'feature': generated_feature})
-
+    
     # Use the embeddings of all sparse nodes as input
     sparse_node_embeddings = np.array(
         [nodes[sparse_node][1]['feature'] for sparse_node in sparse_nodes])
@@ -216,12 +209,11 @@ if is_incomplete:
     print("Generated Node Feature:")
     print(generated_feature)
 
-    print("New Node:", new_node)
-
     # Create a NetworkX graph
     G = nx.Graph()
     G.add_nodes_from(nodes)
     G.add_edges_from(edges)
+
 
     existing_node_features = np.array(
         [data['feature'] for _, data in G.nodes(data=True)])
@@ -237,11 +229,11 @@ if is_incomplete:
     # print the features of existing_node and new_node
     print("Existing Node Feature:", G.nodes[most_similar_node]['feature'])
 
-    # Add new node to the graph
+    # # Add new node to the graph
     G.add_node(new_node[0], feature=new_node[1]['feature'])
 
     print("New Node Feature:", G.nodes[new_node[0]]['feature'])
-
+    
     G.add_edge(new_node[0], most_similar_node)
 
     print("Updated Node Features and Graph:")

@@ -9,10 +9,9 @@ import matplotlib.pyplot as plt
 import ast
 from sklearn.metrics.pairwise import cosine_similarity
 
-
 # Define a small set of triples for the dummy knowledge graph
 triples = []
-file_name = "new_triple.txt"
+file_name = "experiment\data\triples.txt"
 
 with open(file_name, 'r') as file:
 
@@ -46,11 +45,11 @@ plt.show()
 
 # Convert the list of triples to a NumPy array
 triples_array = np.array(triples)
-# print("Triples Array:\n", triples_array)
+print("Triples Array:\n", triples_array)
 
 # Create a TriplesFactory from the triples
 triples_factory = TriplesFactory.from_labeled_triples(triples_array)
-# print("Triples Factory:\n", triples_factory)
+print("Triples Factory:\n", triples_factory)
 
 # Function to safely split triples and handle errors
 
@@ -80,7 +79,7 @@ if training is None:
 # )
 
 # result = torch.load("rescal_model.pth")
-result = torch.load("rescal_model.pth",
+result = torch.load("experiment\models\rescal_model.pth",
                     map_location=torch.device('cpu'))
 
 # Extract the entity and relation embeddings
@@ -89,15 +88,15 @@ entity_embeddings = result.entity_representations[0](
 relation_embeddings = result.relation_representations[0](
     indices=None).cpu().detach().numpy()
 
-# print("Entity Embeddings:\n", entity_embeddings)
-# print("Relation Embeddings:\n", relation_embeddings)
+print("Entity Embeddings:\n", entity_embeddings)
+print("Relation Embeddings:\n", relation_embeddings)
 
 # Create a simple knowledge graph
 G = nx.Graph()
-# nodes = [(0, {'feature': [0.1, 0.2]}),
-#         (1, {'feature': [0.3, 0.4]}),
-#         (2, {'feature': [0.5, 0.6]}),
-#         (3, {'feature': [0.7, 0.8]}),
+# nodes = [(0, {'feature': [0.1, 0.2]}), 
+#         (1, {'feature': [0.3, 0.4]}), 
+#         (2, {'feature': [0.5, 0.6]}), 
+#         (3, {'feature': [0.7, 0.8]}), 
 #         (4, {'feature': [0.9, 1.0]}),
 #         (5, {'feature': [1.1, 1.2]}),
 #         (6, {'feature': [0.34688088, 0.42952386]})]
@@ -108,14 +107,14 @@ entity_to_id = {entity: idx for idx, entity in enumerate(entities)}
 
 # Generate the nodes list
 nodes = [(entity_to_id[entity], {
-    'feature': entity_embeddings[entity_to_id[entity]].tolist()}) for entity in entities]
+        'feature': entity_embeddings[entity_to_id[entity]].tolist()}) for entity in entities]
 
 # Generate the edges list
 edges = [(entity_to_id[head], entity_to_id[tail]) for head, _, tail in triples]
 
 # Print nodes and edges
-# print("Nodes:\n", nodes, len(nodes))
-# print("Edges:\n", edges, len(edges))
+print("Nodes:\n", nodes, len(nodes))
+print("Edges:\n", edges, len(edges))
 
 G.add_nodes_from(nodes)
 G.add_edges_from(edges)
@@ -129,7 +128,6 @@ nx.draw(G, with_labels=True)
 plt.show()
 
 ###############################################
-
 
 def gini_index(array):
     array = np.sort(array)
@@ -158,7 +156,7 @@ is_incomplete = gini > gini_threshold
 print("Is the Knowledge Graph incomplete?", is_incomplete)
 
 # Identify sparse nodes based on a threshold
-threshold = 0.5
+threshold = 0.5 
 sparse_nodes_indices = np.where(normalized_degrees < threshold)[0]
 sparse_nodes = [n for n in sparse_nodes_indices]
 
@@ -180,30 +178,19 @@ class Generator(nn.Module):
     def forward(self, noise):
         return self.fc(noise)
 
-
-##################################################cls
+##################################################
 embedding_dim = entity_embeddings.shape[1]
 # generator = torch.load("generator_model.pth")
-generator = torch.load("generator_model.pth")
+generator = torch.load("experiment\models\generator_model.pth")
+
 
 
 # Generate a new node if the graph is incomplete
 # is_incomplete = True  # Assuming the graph is incomplete for demonstration
 if is_incomplete:
-    # z = torch.randn(1, embedding_dim)          # This is the problem now as z should be neighbouring node embeddings (the latent space)
-    # generated_feature = generator(z).detach().numpy().flatten()
     
-    # Use the embeddings of all sparse nodes as input
-    sparse_node_embeddings = np.array(
-        [nodes[sparse_node][1]['feature'] for sparse_node in sparse_nodes])
-
-    # Calculate the mean of the sparse node embeddings
-    mean_sparse_node_embedding = np.mean(sparse_node_embeddings, axis=0)
-    mean_sparse_node_embedding_tensor = torch.tensor(
-        mean_sparse_node_embedding, dtype=torch.float32).unsqueeze(0)
-
-    generated_feature = generator(
-        mean_sparse_node_embedding_tensor).detach().numpy().flatten()
+    z = torch.randn(1, embedding_dim)
+    generated_feature = generator(z).detach().numpy().flatten()
     new_node = (len(nodes), {'feature': generated_feature})
 
     print("Generated Node Feature:")
@@ -214,32 +201,17 @@ if is_incomplete:
     G.add_nodes_from(nodes)
     G.add_edges_from(edges)
 
-
-    existing_node_features = np.array(
-        [data['feature'] for _, data in G.nodes(data=True)])
-    similarities = cosine_similarity(
-        [generated_feature], existing_node_features).flatten()
-    most_similar_node = np.argmax(similarities)
-
-    # print("Similarities:", similarities)
-    print("most_similar node:", most_similar_node)
-
-    print("similarity of most_similar_node: ", similarities[most_similar_node])
-
-    # print the features of existing_node and new_node
-    print("Existing Node Feature:", G.nodes[most_similar_node]['feature'])
-
-    # # Add new node to the graph
+    # choose an existing
+    existing_node = np.random.choice(G.nodes)
+    # Add new node to the graph
     G.add_node(new_node[0], feature=new_node[1]['feature'])
 
-    print("New Node Feature:", G.nodes[new_node[0]]['feature'])
-    
-    G.add_edge(new_node[0], most_similar_node)
+    G.add_edge(new_node[0], existing_node)
 
     print("Updated Node Features and Graph:")
     node_features = np.array([data['feature']
                             for _, data in G.nodes(data=True)])
     print(node_features)
-
+    
     nx.draw(G, with_labels=True)
     plt.show()

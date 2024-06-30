@@ -14,7 +14,7 @@ from pykeen.pipeline import pipeline
 import ast
 
 triples = []
-file_name = "triples.txt"
+file_name = "experiment\data\triples.txt"
 
 with open(file_name, 'r') as file:
     file_content = file.read()
@@ -27,7 +27,7 @@ with open(file_name, 'r') as file:
 triples_array = np.array(triples)
 triples_factory = TriplesFactory.from_labeled_triples(triples_array)
 
-result = torch.load("rescal_model.pth", map_location=torch.device('cuda'))
+result = torch.load("experiment\models\rescal_model.pth", map_location=torch.device('cuda'))
 
 entity_embeddings = result.entity_representations[0](indices=None).cpu().detach().numpy()
 relation_embeddings = result.relation_representations[0](indices=None).cpu().detach().numpy()
@@ -97,7 +97,7 @@ def train():
     return loss
 
 # saving the model
-torch.save(model, "gcn_model_1.pth")
+torch.save(model, "experiment\models\gcn_model_1.pth")
 
 @torch.no_grad()
 def test(data):
@@ -172,7 +172,7 @@ class Generator(nn.Module):
         return self.original_generator(noise.size(0), noise.is_cuda)
 
 embedding_dim = entity_embeddings.shape[1]
-generator = torch.load("generator_model_2.pth").to(device)
+generator = torch.load("experiment\models\generator_model_2.pth").to(device)
 
 with torch.no_grad():
     model.eval()

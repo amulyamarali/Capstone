@@ -19,7 +19,7 @@ from functional import LinearWeightNorm
 
 # Define a small set of triples for the dummy knowledge graph
 triples = []
-file_name = "triples.txt"
+file_name = "experiment\data\triples.txt"
 
 with open(file_name, 'r') as file:
     # Read the contents of the file
@@ -263,10 +263,10 @@ for epoch in range(num_epochs):
             f"[Epoch {epoch}/{num_epochs}] [D loss: {d_loss.item():.4f}] [G loss: {g_loss.item():.4f}]")
 
 # Save the Generator model
-torch.save(generator, 'generator_model_node2vec.pth')
+torch.save(generator, 'gexperiment\models\enerator_model_node2vec.pth')
 
 # Save the Discriminator model
-torch.save(discriminator, 'discriminator_node2vec.pth')
+torch.save(discriminator, 'experiment\models\discriminator_node2vec.pth')
 
 # Generate a new node if the graph is incomplete
 if is_incomplete:
