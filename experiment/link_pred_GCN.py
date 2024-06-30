@@ -1,4 +1,3 @@
-
 import os.path as osp
 import torch
 import torch.nn as nn
@@ -12,16 +11,26 @@ from torch_geometric.nn import GCNConv
 from torch_geometric.utils import negative_sampling
 from pykeen.triples import TriplesFactory
 from pykeen.pipeline import pipeline
+import matplotlib.pyplot as plt
+import ast
 
-# Load the triples data
-triples = [
-    ('A', 'likes', 'B'),
-    ('B', 'friends', 'C'),
-    ('A', 'likes', 'C'),
-    ('C', 'likes', 'D'),
-    ('D', 'likes', 'E'),
-    ('E', 'friends', 'F'),
-]
+triples = []
+file_name = "triples.txt"
+
+with open(file_name, 'r') as file:
+
+    # Read the contents of the file
+    file_content = file.read()
+
+    # Convert the string representation of the list back to an actual list
+    new_data = ast.literal_eval(file_content)
+
+    # Append the new data to the existing list
+    if isinstance(new_data, list):
+        triples.extend(new_data)
+    else:
+        print("The data in the file is not a list.")
+
 
 # Convert the list of triples to a NumPy array
 triples_array = np.array(triples)
@@ -39,29 +48,29 @@ relation_embeddings = result.relation_representations[0](
 entities = list(triples_factory.entity_to_id.keys())
 relations = list(triples_factory.relation_to_id.keys())
 
-# Create the PyTorch Geometric Data object
+# # Create the PyTorch Geometric Data object
 entity_to_id = triples_factory.entity_to_id
 relation_to_id = triples_factory.relation_to_id
 edges = [(entity_to_id[head], entity_to_id[tail]) for head, _, tail in triples]
 
-print(entity_to_id)
-print(relation_to_id)
-print("edges:", edges)
+# print(entity_to_id)
+# print(relation_to_id)
+# print("edges:", edges)
 
-# Generate the nodes list
+# # Generate the nodes list
 nodes = [(entity_to_id[entity], {
     'feature': entity_embeddings[entity_to_id[entity]].tolist()}) for entity in entities]
 
-# Generate the edges list
+# # Generate the edges list
 edges = [(entity_to_id[head], entity_to_id[tail]) for head, _, tail in triples]
 
-# Print nodes and edges
-print("Nodes:\n", nodes, len(nodes))
-print("Edges:\n", edges, len(edges))
+# # Print nodes and edges
+# print("Nodes:\n", nodes, len(nodes))
+# print("Edges:\n", edges, len(edges))
 
-G = nx.Graph()
-G.add_nodes_from(nodes)
-G.add_edges_from(edges)
+# G = nx.Graph()
+# G.add_nodes_from(nodes)
+# G.add_edges_from(edges)
 
 
 
@@ -87,8 +96,8 @@ class Net(torch.nn.Module):
 
 edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
 
-# Random initial features
 node_features = torch.randn((len(entities), 50), dtype=torch.float)
+# node_features = torch.tensor(entity_embeddings, dtype=torch.float)
 
 print("node_features: ", node_features)
 
