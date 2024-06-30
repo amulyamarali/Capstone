@@ -268,28 +268,17 @@ if is_incomplete:
 
     # Predict links using the trained GNN model
     model.eval()
-    with torch.no_grad():
-        print("hi!!!!!")
-        z = model.encode(data.x, data.train_pos_edge_index)
-        new_node_tensor = torch.tensor(generated_feature, dtype=torch.float).unsqueeze(0)
-        z_new_node = model.encoder.conv1(new_node_tensor, edge_index)
-        z_new_node = F.relu(z_new_node)
-        z_new_node = model.encoder.conv2(z_new_node, edge_index)
+    embeddings = model(data.x, data.edge_index).cpu().numpy()
 
-        similarities = torch.mm(z, z_new_node.t())
-        most_similar_node = similarities.argmax().item()
-    
-    # Update edge index to include the new node
-    edge_index = torch.cat([data.edge_index, torch.tensor([[new_node_idx], [most_similar_node]], dtype=torch.long)], dim=1)
+# Visualize or further process node embeddings as needed
+print("Node Embeddings:\n", embeddings)
 
-    print("Most similar node:", most_similar_node)
-    print("Similarity of most similar node:", similarities[most_similar_node].item())
+# Example of using node embeddings for similarity calculation
+similarities = cosine_similarity(embeddings, embeddings)
+print("Cosine Similarity Matrix:\n", similarities)
 
-    print("Existing Node Feature:", G.nodes[most_similar_node]['feature'])
-    G.add_edge(new_node_idx, most_similar_node)
+# Example of generating a new node using GNN
+# new_node_features = model(torch.randn(0, feature_dim), data.edge_index).cpu().numpy().flatten()
+# print("Generated Node Features:\n", new_node_features)
 
-    print("New Node Feature:", G.nodes[new_node_idx]['feature'])
-    print("Original Entity Label:", entities[most_similar_node])
-
-    nx.draw(G, with_labels=True)
-    plt.show()
+# Continue with your code to update the graph or perform other tasks
