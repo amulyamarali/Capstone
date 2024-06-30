@@ -48,23 +48,17 @@ relation_embeddings = result.relation_representations[0](
 entities = list(triples_factory.entity_to_id.keys())
 relations = list(triples_factory.relation_to_id.keys())
 
-# # Create the PyTorch Geometric Data object
 entity_to_id = triples_factory.entity_to_id
 relation_to_id = triples_factory.relation_to_id
-edges = [(entity_to_id[head], entity_to_id[tail]) for head, _, tail in triples]
 
-# print(entity_to_id)
-# print(relation_to_id)
-# print("edges:", edges)
-
-# # Generate the nodes list
+# Generate the nodes list
 nodes = [(entity_to_id[entity], {
     'feature': entity_embeddings[entity_to_id[entity]].tolist()}) for entity in entities]
 
-# # Generate the edges list
+# Generate the edges list
 edges = [(entity_to_id[head], entity_to_id[tail]) for head, _, tail in triples]
 
-# # Print nodes and edges
+# Print nodes and edges
 # print("Nodes:\n", nodes, len(nodes))
 # print("Edges:\n", edges, len(edges))
 
@@ -96,8 +90,10 @@ class Net(torch.nn.Module):
 
 edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
 
-node_features = torch.randn((len(entities), 50), dtype=torch.float)
-# node_features = torch.tensor(entity_embeddings, dtype=torch.float)
+# node_features = torch.randn((len(entities), 50), dtype=torch.float)
+node_feature_list = [entity_embeddings[entity_to_id[entity]] for entity in entities]
+
+node_features = torch.tensor(node_feature_list, dtype=torch.float)
 
 print("node_features: ", node_features)
 
@@ -229,7 +225,7 @@ with torch.no_grad():
     most_likely_link_index = new_edge_predictions.argmax().item()
     most_likely_link_node = existing_node_indices[most_likely_link_index].item()
 
-    print(f"The new node is most likely to link with node {most_likely_link_node}.")
+    print(f"The new node is most likely to link with node {most_likely_link_node} with the score of {new_edge_predictions[most_likely_link_index]}.")
 
 # Visualize the updated graph
 G = nx.Graph()
