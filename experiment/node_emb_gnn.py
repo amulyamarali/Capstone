@@ -74,7 +74,7 @@ similarities = cosine_similarity(embeddings, embeddings)
 print("Cosine Similarity Matrix:\n", similarities)
 
 # Example of generating a new node using GNN
-new_node_features = model(torch.randn(0, feature_dim), data.edge_index).cpu().numpy().flatten()
-print("Generated Node Features:\n", new_node_features)
+# new_node_features = model(torch.randn(0, feature_dim), data.edge_index).cpu().numpy().flatten()
+# print("Generated Node Features:\n", new_node_features)
 
 # Continue with your code to update the graph or perform other tasks

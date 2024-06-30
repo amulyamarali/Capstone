@@ -188,6 +188,7 @@ generator = torch.load("generator_model.pth")
 # Generate a new node if the graph is incomplete
 # is_incomplete = True  # Assuming the graph is incomplete for demonstration
 if is_incomplete:
+    
     z = torch.randn(1, embedding_dim)
     generated_feature = generator(z).detach().numpy().flatten()
     new_node = (len(nodes), {'feature': generated_feature})
@@ -200,7 +201,7 @@ if is_incomplete:
     G.add_nodes_from(nodes)
     G.add_edges_from(edges)
 
-    # choose an existing node
+    # choose an existing
     existing_node = np.random.choice(G.nodes)
     # Add new node to the graph
     G.add_node(new_node[0], feature=new_node[1]['feature'])
