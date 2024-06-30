@@ -96,6 +96,9 @@ def train():
     optimizer.step()
     return loss
 
+# saving the model
+torch.save(model, "gcn_model_1.pth")
+
 @torch.no_grad()
 def test(data):
     model.eval()
@@ -126,21 +129,50 @@ for epoch in range(1, 101):
 
 print(f'Final Test: {final_test_auc:.4f}')
 
+
+from torch.nn import functional as F
+from torch.autograd import Variable
+
+from torch.nn.parameter import Parameter
+
+# Assuming LinearWeightNorm is defined in functional module
+from functional import LinearWeightNorm
+
+class OriginalGenerator(nn.Module):
+    def __init__(self, z_dim, output_dim=28 ** 2):
+        super(OriginalGenerator, self).__init__()
+        self.z_dim = z_dim
+        self.fc1 = nn.Linear(z_dim, 500, bias=False)
+        self.bn1 = nn.BatchNorm1d(500, affine=False, eps=1e-6, momentum=0.5)
+        self.fc2 = nn.Linear(500, 500, bias=False)
+        self.bn2 = nn.BatchNorm1d(500, affine=False, eps=1e-6, momentum=0.5)
+        self.fc3 = LinearWeightNorm(500, output_dim, weight_scale=1)
+        self.bn1_b = Parameter(torch.zeros(500))
+        self.bn2_b = Parameter(torch.zeros(500))
+        nn.init.xavier_uniform_(self.fc1.weight)
+        nn.init.xavier_uniform_(self.fc2.weight)
+
+    def forward(self, batch_size, cuda=False, seed=-1):
+        x = Variable(torch.rand(batch_size, self.z_dim), requires_grad=False, volatile=not self.training)
+        if cuda:
+            x = x.cuda()
+        x = F.elu(self.bn1(self.fc1(x)) + self.bn1_b)
+        x = F.elu(self.bn2(self.fc2(x)) + self.bn2_b)
+        x = F.tanh(self.fc3(x))
+        return x
+
 class Generator(nn.Module):
     def __init__(self, embedding_dim):
         super(Generator, self).__init__()
         self.embedding_dim = embedding_dim
-        self.fc = nn.Sequential(
-            nn.Linear(embedding_dim, 128),
-            nn.ReLU(),
-            nn.Linear(128, embedding_dim)
-        )
+        self.original_generator = OriginalGenerator(embedding_dim, embedding_dim)
 
     def forward(self, noise):
-        return self.fc(noise)
+        self.original_generator.eval()  # Ensure eval mode for batchnorm
+        return self.original_generator(noise.size(0), noise.is_cuda)
 
 embedding_dim = entity_embeddings.shape[1]
-generator = torch.load("generator_model.pth").to(device)
+generator = torch.load("generator_model_2.pth").to(device)
 
 with torch.no_grad():
     model.eval()

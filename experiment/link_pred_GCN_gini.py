@@ -41,6 +41,69 @@ relation_to_id = triples_factory.relation_to_id
 nodes = [(entity_to_id[entity], {'feature': entity_embeddings[entity_to_id[entity]].tolist()}) for entity in entities]
 edges = [(entity_to_id[head], entity_to_id[tail]) for head, _, tail in triples]
 
+###############################################
+
+# Create a simple knowledge graph
+G = nx.Graph()
+
+entities = list(triples_factory.entity_to_id.keys())
+entity_to_id = {entity: idx for idx, entity in enumerate(entities)}
+
+# Generate the nodes list
+nodes = [(entity_to_id[entity], {
+        'feature': entity_embeddings[entity_to_id[entity]].tolist()}) for entity in entities]
+
+# Generate the edges list
+edges = [(entity_to_id[head], entity_to_id[tail]) for head, _, tail in triples]
+
+# Print nodes and edges
+print("Nodes:\n", nodes, len(nodes))
+print("Edges:\n", edges, len(edges))
+
+G.add_nodes_from(nodes)
+G.add_edges_from(edges)
+
+# Extract node features
+node_features = np.array([data['feature'] for _, data in G.nodes(data=True)])
+
+print("Node Features:")
+print(node_features)
+nx.draw(G, with_labels=True)
+plt.show()
+
+def gini_index(array):
+    array = np.sort(array)
+    index = np.arange(1, array.shape[0] + 1)
+    n = array.shape[0]
+    return ((2 * np.sum(index * array)) / (n * np.sum(array))) - ((n + 1) / n)
+
+
+# Calculate the degree of each node
+degrees = np.array([G.degree(n) for n in G.nodes])
+
+# Normalize node degrees
+max_total_degree = np.max(degrees)
+normalized_degrees = degrees / max_total_degree
+
+# Calculate the Gini index
+gini = gini_index(degrees)
+print("Gini Index:", gini)
+
+# Threshold for Gini index to determine sparsity
+gini_threshold = 0.3  # This threshold can be adjusted
+
+is_incomplete = gini > gini_threshold
+print("Is the Knowledge Graph incomplete?", is_incomplete)
+
+# Identify sparse nodes based on a threshold
+threshold = 0.5 
+sparse_nodes_indices = np.where(normalized_degrees < threshold)[0]
+sparse_nodes = [n for n in sparse_nodes_indices]
+
+print("\nSparse nodes:", sparse_nodes)
+
+################################################
+
 class Net(torch.nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels):
         super().__init__()
@@ -63,7 +126,10 @@ edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
 node_feature_list = [entity_embeddings[entity_to_id[entity]] for entity in entities]
 node_features = torch.tensor(node_feature_list, dtype=torch.float)
 
-data = Data(x=node_features, edge_index=edge_index)
+sparse_node_list = [nodes[sparse_node][1]['feature'] for sparse_node in sparse_nodes]
+sparse_node_embeddings = torch.tensor(sparse_node_list, dtype=torch.float)
+
+data = Data(x=sparse_node_embeddings, edge_index=edge_index)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 data = data.to(device)  # Ensure data is on the same device
