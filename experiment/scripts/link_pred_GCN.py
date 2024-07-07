@@ -14,7 +14,7 @@ from pykeen.pipeline import pipeline
 import ast
 
 triples = []
-file_name = "experiment\data\triples.txt"
+file_name = "../data/triples.txt"
 
 with open(file_name, 'r') as file:
     file_content = file.read()
@@ -27,7 +27,7 @@ with open(file_name, 'r') as file:
 triples_array = np.array(triples)
 triples_factory = TriplesFactory.from_labeled_triples(triples_array)
 
-result = torch.load("experiment\models\rescal_model.pth", map_location=torch.device('cuda'))
+result = torch.load("../models/rescal_model.pth", map_location=torch.device('cuda'))
 
 entity_embeddings = result.entity_representations[0](indices=None).cpu().detach().numpy()
 relation_embeddings = result.relation_representations[0](indices=None).cpu().detach().numpy()
@@ -140,7 +140,7 @@ class Generator(nn.Module):
         return self.fc(noise)
 
 embedding_dim = entity_embeddings.shape[1]
-generator = torch.load("experiment\models\generator_model.pth").to(device)
+generator = torch.load("../models/generator_model.pth").to(device)
 
 with torch.no_grad():
     model.eval()
@@ -149,6 +149,8 @@ with torch.no_grad():
     new_z = torch.randn(1, embedding_dim).to(device)
     generated_feature = generator(new_z).detach().cpu().numpy().flatten()
     new_node_feature = torch.tensor(generated_feature, dtype=torch.float, device=device).unsqueeze(0)
+
+    new_node = (len(nodes), {'feature': generated_feature})  # i added now 
 
     extended_node_features = torch.cat([data.x, new_node_feature], dim=0)
 
@@ -160,6 +162,10 @@ with torch.no_grad():
 
     new_edge_predictions = model.decode(extended_z, new_edge_label_index).sigmoid()
 
+    G = nx.Graph()
+    G.add_nodes_from(nodes)
+    G.add_edges_from(edges)
+
     print("New Edge Predictions:")
     print(new_edge_predictions)
 
@@ -168,9 +174,21 @@ with torch.no_grad():
 
     print(f"The new node is most likely to link with node {most_likely_link_node} with the score of {new_edge_predictions[most_likely_link_index]}.")
 
-G = nx.Graph()
-edges = torch.cat([data.edge_index, new_edge_label_index[:,most_likely_link_index].unsqueeze(1)], dim=1).cpu().numpy()
-G.add_edges_from(edges.T)
-pos = nx.spring_layout(G)
-nx.draw(G, pos, with_labels=True, node_color='lightblue', font_weight='bold')
-plt.show()
+    # Add new node to the graph
+    G.add_node(new_node[0], feature=new_node[1]['feature'])
+    G.add_edge(new_node[0], most_likely_link_node)
+
+    # Define colors for the nodes
+    node_colors = ['red' if node == new_node[0] else 'lightblue' for node in G.nodes()]
+
+    # Draw the graph with specified node colors
+    pos = nx.spring_layout(G)
+    nx.draw(G, pos, with_labels=True, node_color=node_colors, font_weight='bold', font_color='black')
+    plt.show()
+
+# G = nx.Graph()
+# edges = torch.cat([data.edge_index, new_edge_label_index[:,most_likely_link_index].unsqueeze(1)], dim=1).cpu().numpy()
+# G.add_edges_from(edges.T)
+# pos = nx.spring_layout(G)
+# nx.draw(G, pos, with_labels=True, node_color='lightblue', font_weight='bold')
+# plt.show()
