@@ -14,7 +14,7 @@ from pykeen.pipeline import pipeline
 import ast
 
 triples = []
-file_name = "experiment\data\triples.txt"
+file_name = "experiment/data/triples.txt"
 
 with open(file_name, 'r') as file:
     file_content = file.read()
@@ -27,7 +27,9 @@ with open(file_name, 'r') as file:
 triples_array = np.array(triples)
 triples_factory = TriplesFactory.from_labeled_triples(triples_array)
 
-result = torch.load("rescal_model.pth", map_location=torch.device('cuda'))
+# result = torch.load("experiment/models/rescal_model.pth", map_location=torch.device('cuda'))
+result = torch.load("experiment/models/rescal_model.pth",
+                    map_location='cuda' if torch.cuda.is_available() else 'cpu')
 
 entity_embeddings = result.entity_representations[0](indices=None).cpu().detach().numpy()
 relation_embeddings = result.relation_representations[0](indices=None).cpu().detach().numpy()
@@ -71,6 +73,9 @@ print(node_features)
 nx.draw(G, with_labels=True)
 plt.show()
 
+
+########################################################
+
 def gini_index(array):
     array = np.sort(array)
     index = np.arange(1, array.shape[0] + 1)
@@ -101,8 +106,41 @@ sparse_nodes_indices = np.where(normalized_degrees < threshold)[0]
 sparse_nodes = [n for n in sparse_nodes_indices]
 
 print("\nSparse nodes:", sparse_nodes)
+print(len(sparse_nodes))
 
 ################################################
+
+edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
+
+node_feature_list = np.array([entity_embeddings[entity_to_id[entity]] for entity in entities])
+node_features = torch.tensor(node_feature_list, dtype=torch.float)
+
+
+# Create a mapping from original indices to new sparse node indices
+sparse_node_indices_map = {
+    sparse_node: idx for idx, sparse_node in enumerate(sparse_nodes)}
+
+print("Sparse Node Indices Map:\n", sparse_node_indices_map)
+
+# Find edges where both source and target nodes are in sparse_node_indices
+sparse_edges = [
+    (sparse_node_indices_map[source], sparse_node_indices_map[target])
+    for source, target in edges
+    if source in sparse_node_indices_map and target in sparse_node_indices_map
+]
+
+# Convert the list of sparse edges to a tensor
+sparse_edge_index = torch.tensor(
+    sparse_edges, dtype=torch.long).t().contiguous()
+# print("sparse edge index:", sparse_edge_index)
+
+# Create data object for sparse node embeddings
+sparse_node_list = np.array(
+    [nodes[sparse_node][1]['feature'] for sparse_node in sparse_nodes])
+sparse_node_embeddings = torch.tensor(sparse_node_list, dtype=torch.float)
+
+#######################################################
+
 
 class Net(torch.nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels):
@@ -121,24 +159,23 @@ class Net(torch.nn.Module):
         prob_adj = z @ z.t()
         return (prob_adj > 0).nonzero(as_tuple=False).t()
 
-edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
-
-node_feature_list = [entity_embeddings[entity_to_id[entity]] for entity in entities]
-node_features = torch.tensor(node_feature_list, dtype=torch.float)
-
-sparse_node_list = [nodes[sparse_node][1]['feature'] for sparse_node in sparse_nodes]
-sparse_node_embeddings = torch.tensor(sparse_node_list, dtype=torch.float)
-
-data = Data(x=sparse_node_embeddings, edge_index=edge_index)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+data = Data(x=node_features, edge_index=edge_index)
 data = data.to(device)  # Ensure data is on the same device
+data.edge_label = torch.ones(
+    data.edge_index.size(1), dtype=torch.float).to(device)
 
 model = Net(data.num_features, 128, 64).to(device)
 optimizer = torch.optim.Adam(params=model.parameters(), lr=0.01)
 criterion = torch.nn.BCEWithLogitsLoss()
 
-data.edge_label = torch.ones(data.edge_index.size(1), dtype=torch.float).to(device)
+data_1 = Data(x=sparse_node_embeddings, edge_index=sparse_edge_index)
+data_1 = data_1.to(device)
+data_1.edge_label = torch.ones(
+    data_1.edge_index.size(1), dtype=torch.float).to(device)
+
+#######################################################
 
 def train():
     model.train()
@@ -205,24 +242,49 @@ class Generator(nn.Module):
     def forward(self, noise):
         return self.fc(noise)
 
+###############################################################
+
 embedding_dim = entity_embeddings.shape[1]
-generator = torch.load("experiment\models\generator_model.pth").to(device)
+generator = torch.load("experiment/models/generator_model.pth").to(device)
+
+
+# Function to get key from value
+def get_key_from_value(d, value):
+    for k, v in d.items():
+        if v == value:
+            return k
+    return None
+
 
 with torch.no_grad():
     model.eval()
-    z = model.encode(data.x, data.edge_index)
+    z = model.encode(data_1.x, data_1.edge_index)
 
-    new_z = torch.randn(1, embedding_dim).to(device)
+    # new_z = torch.randn(1, embedding_dim).to(device)
+
+    sparse_node_embeddings = np.array(
+        [nodes[sparse_node][1]['feature'] for sparse_node in sparse_nodes])
+
+    # Calculate the mean of the sparse node embeddings
+    mean_sparse_node_embedding = np.mean(sparse_node_embeddings, axis=0)
+    new_z = torch.tensor(
+        mean_sparse_node_embedding, dtype=torch.float32).unsqueeze(0)
     generated_feature = generator(new_z).detach().cpu().numpy().flatten()
     new_node_feature = torch.tensor(generated_feature, dtype=torch.float, device=device).unsqueeze(0)
 
+    new_node = (len(nodes), {'feature': generated_feature})
+
     extended_node_features = torch.cat([data.x, new_node_feature], dim=0)
+
 
     new_node_index = torch.tensor([data.num_nodes], dtype=torch.long, device=device)
     existing_node_indices = torch.arange(data.num_nodes, dtype=torch.long, device=device)
     new_edge_label_index = torch.stack([new_node_index.repeat(existing_node_indices.size(0)), existing_node_indices], dim=0)
 
-    extended_z = model.encode(extended_node_features, data.edge_index)
+    print("new node: ", new_node_index)
+
+    # encode new node features to predict the tail entity suing only sparse node features
+    extended_z = model.encode(extended_node_features, data_1.edge_index)
 
     new_edge_predictions = model.decode(extended_z, new_edge_label_index).sigmoid()
 
@@ -232,11 +294,25 @@ with torch.no_grad():
     most_likely_link_index = new_edge_predictions.argmax().item()
     most_likely_link_node = existing_node_indices[most_likely_link_index].item()
 
-    print(f"The new node is most likely to link with node {most_likely_link_node} with the score of {new_edge_predictions[most_likely_link_index]}.")
+    # get the original index of the node that gets connected with the new node from sparse nodes index map 
+    original_node = get_key_from_value(sparse_node_indices_map, most_likely_link_node)
+
+    print("node index before mapping: ", most_likely_link_node)
+    print("original node index: ", original_node)
+
+    print(f"The new node is most likely to link with node {original_node} with the score of {new_edge_predictions[most_likely_link_index]}.")
+
 
 G = nx.Graph()
-edges = torch.cat([data.edge_index, new_edge_label_index[:,most_likely_link_index].unsqueeze(1)], dim=1).cpu().numpy()
-G.add_edges_from(edges.T)
+# edges = torch.cat([data.edge_index, new_edge_label_index[:,original_node].unsqueeze(1)], dim=1).cpu().numpy()
+# G.add_edges_from(edges.T)
+G.add_nodes_from(nodes)
+G.add_edges_from(edges)
+G.add_node(new_node[0], feature=generated_feature)
+G.add_edge(new_node[0], original_node)
+node_colors = ['red' if node == new_node[0]
+                else 'lightblue' for node in G.nodes()]
 pos = nx.spring_layout(G)
-nx.draw(G, pos, with_labels=True, node_color='lightblue', font_weight='bold')
+nx.draw(G, pos, with_labels=True, node_color=node_colors,
+            font_weight='bold', font_color='black')
 plt.show()
