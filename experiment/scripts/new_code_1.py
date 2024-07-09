@@ -10,7 +10,7 @@ import ast
 
 # Define a small set of triples for the dummy knowledge graph
 triples = []
-file_name = "experiment\data\triples.txt"
+file_name = "../data/triples.txt"
 
 with open(file_name, 'r') as file:
 
@@ -69,31 +69,31 @@ if training is None:
     exit(1)
 
 # Define the RESCAL model and train it using the pipeline
-# result = pipeline(
-#     model='RESCAL',
-#     training=training,
-#     testing=testing,
-#     training_kwargs=dict(num_epochs=100, batch_size=2),
-#     optimizer_kwargs=dict(lr=0.01),
-# )
+result = pipeline(
+    model='RESCAL',
+    training=training,
+    testing=testing,
+    training_kwargs=dict(num_epochs=100, batch_size=2),
+    optimizer_kwargs=dict(lr=0.01),
+)
 
-# # save the RESCAL embedding model
-# torch.save(result.model, 'rescal_model.pth')
+# save the RESCAL embedding model
+torch.save(result.model, 'rescal_model.pth')
 
-# # Extract the entity and relation embeddings
-# entity_embeddings = result.model.entity_representations[0](
-#     indices=None).cpu().detach().numpy()
-# relation_embeddings = result.model.relation_representations[0](
-#     indices=None).cpu().detach().numpy()
-
-
-# For saved RESCAL model 
-result = torch.load("experiment\models\rescal_model.pth")
-
-entity_embeddings = result.entity_representations[0](
+# Extract the entity and relation embeddings
+entity_embeddings = result.model.entity_representations[0](
     indices=None).cpu().detach().numpy()
-relation_embeddings = result.relation_representations[0](
+relation_embeddings = result.model.relation_representations[0](
     indices=None).cpu().detach().numpy()
+
+
+# # For saved RESCAL model 
+# result = torch.load("experiment\models\rescal_model.pth")
+
+# entity_embeddings = result.entity_representations[0](
+#     indices=None).cpu().detach().numpy()
+# relation_embeddings = result.relation_representations[0](
+#     indices=None).cpu().detach().numpy()
 
 print("Entity Embeddings:\n", entity_embeddings)
 print("Relation Embeddings:\n", relation_embeddings)

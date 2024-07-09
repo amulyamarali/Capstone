@@ -1,3 +1,5 @@
+# for evaluating of the GCN Model
+
 import os.path as osp
 import torch
 import torch.nn as nn
@@ -89,8 +91,8 @@ nodes = [(entity_to_id[entity], {
 edges = [(entity_to_id[head], entity_to_id[tail]) for head, _, tail in triples]
 
 # Print nodes and edges
-print("Nodes:\n", nodes, len(nodes))
-print("Edges:\n", edges, len(edges))
+# print("Nodes:\n", nodes, len(nodes))
+# print("Edges:\n", edges, len(edges))
 
 G.add_nodes_from(nodes)
 G.add_edges_from(edges)
@@ -150,7 +152,7 @@ node_features = torch.tensor(node_feature_list, dtype=torch.float)
 sparse_node_indices_map = {
     sparse_node: idx for idx, sparse_node in enumerate(sparse_nodes)}
 
-print("Sparse Node Indices Map:\n", sparse_node_indices_map)
+# print("Sparse Node Indices Map:\n", sparse_node_indices_map)  
 
 # Find edges where both source and target nodes are in sparse_node_indices
 sparse_edges = [
@@ -183,7 +185,6 @@ class Net(torch.nn.Module):
         return self.conv2(x, edge_index)
 
     def decode(self, z, edge_label_index):
-        print("edge_label_index: ", edge_label_index)
         return (z[edge_label_index[0]] * z[edge_label_index[1]]).sum(dim=-1)
 
     def decode_all(self, z):
@@ -249,16 +250,45 @@ def test(data):
     out = model.decode(z, edge_label_index).view(-1).sigmoid()
     return roc_auc_score(edge_label.cpu().numpy(), out.cpu().numpy())
 
+losses = []
+val_aucs = []
+
 best_val_auc = final_test_auc = 0
 for epoch in range(1, 101):
     loss = train()
     val_auc = test(data)
+    losses.append(loss.item())  # Store the loss value
+    val_aucs.append(val_auc)    # Store the validation AUC value
+
     if val_auc > best_val_auc:
         best_val_auc = val_auc
         final_test_auc = val_auc
+
     print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Val: {val_auc:.4f}')
 
 print(f'Final Test: {final_test_auc:.4f}')
+
+import matplotlib.pyplot as plt
+
+# Plot the loss and validation AUC
+plt.figure(figsize=(12, 6))
+
+plt.subplot(1, 2, 1)
+plt.plot(losses, label='Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.title('Training Loss')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(val_aucs, label='Validation AUC', color='orange')
+plt.xlabel('Epoch')
+plt.ylabel('Validation AUC')
+plt.title('Validation AUC')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
 
 class Generator(nn.Module):
     def __init__(self, embedding_dim):
@@ -288,12 +318,14 @@ def get_key_from_value(d, value):
 
 # Metric computation ***************************************
 precision, recall, f1 = compute_metrics(data)
-print(f"Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}")
+# print(f"Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}")
 
 
 with torch.no_grad():
+
+    # print("data for x: ", data.x)
     model.eval()
-    z = model.encode(data_1.x, data_1.edge_index)
+    z = model.encode(data.x, data.edge_index)
 
     # new_z = torch.randn(1, embedding_dim).to(device)
 
@@ -304,7 +336,8 @@ with torch.no_grad():
     mean_sparse_node_embedding = np.mean(sparse_node_embeddings, axis=0)
     new_z = torch.tensor(
         mean_sparse_node_embedding, dtype=torch.float32).unsqueeze(0).to(device)
-    generated_feature = generator(new_z).detach().cpu().numpy().flatten()
+    generated_feature = node_features[419].cpu().numpy().flatten()
+    print("Generated Feature: ", generated_feature)
     new_node_feature = torch.tensor(generated_feature, dtype=torch.float, device=device).unsqueeze(0)
 
     new_node = (len(nodes), {'feature': generated_feature})
@@ -319,7 +352,7 @@ with torch.no_grad():
     print("new node: ", new_node_index)
 
     # encode new node features to predict the tail entity suing only sparse node features
-    extended_z = model.encode(extended_node_features, data_1.edge_index)
+    extended_z = model.encode(extended_node_features, data.edge_index)
 
     new_edge_predictions = model.decode(extended_z, new_edge_label_index).sigmoid()
 
