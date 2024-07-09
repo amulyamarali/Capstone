@@ -75,7 +75,7 @@ result = pipeline(
 )
 
 # Save the TransE embedding model
-torch.save(result.model, 'transe_model.pth')
+torch.save(result.model, '../model/transe_model.pth')
 
 # Print a message indicating that the TransE model has been saved
 print("TransE model saved successfully.")
