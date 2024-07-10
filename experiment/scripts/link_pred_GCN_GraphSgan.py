@@ -12,6 +12,13 @@ from torch_geometric.utils import negative_sampling
 from pykeen.triples import TriplesFactory
 from pykeen.pipeline import pipeline
 import ast
+from torch.nn import functional as F
+from torch.autograd import Variable
+
+from torch.nn.parameter import Parameter
+
+# Assuming LinearWeightNorm is defined in functional module
+from functional import LinearWeightNorm
 
 triples = []
 file_name = "experiment\data\triples.txt"
@@ -129,14 +136,6 @@ for epoch in range(1, 101):
 
 print(f'Final Test: {final_test_auc:.4f}')
 
-
-from torch.nn import functional as F
-from torch.autograd import Variable
-
-from torch.nn.parameter import Parameter
-
-# Assuming LinearWeightNorm is defined in functional module
-from functional import LinearWeightNorm
 
 class OriginalGenerator(nn.Module):
     def __init__(self, z_dim, output_dim=28 ** 2):
