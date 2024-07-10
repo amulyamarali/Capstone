@@ -68,32 +68,32 @@ if training is None:
     print("Failed to split triples. Exiting.")
     exit(1)
 
-# Define the RESCAL model and train it using the pipeline
-result = pipeline(
-    model='RESCAL',
-    training=training,
-    testing=testing,
-    training_kwargs=dict(num_epochs=100, batch_size=2),
-    optimizer_kwargs=dict(lr=0.01),
-)
+# # Define the RESCAL model and train it using the pipeline
+# result = pipeline(
+#     model='RESCAL',
+#     training=training,
+#     testing=testing,
+#     training_kwargs=dict(num_epochs=100, batch_size=2),
+#     optimizer_kwargs=dict(lr=0.01),
+# )
 
-# save the RESCAL embedding model
-torch.save(result.model, 'rescal_model.pth')
+# # save the RESCAL embedding model
+# torch.save(result.model, 'rescal_model.pth')
 
-# Extract the entity and relation embeddings
-entity_embeddings = result.model.entity_representations[0](
-    indices=None).cpu().detach().numpy()
-relation_embeddings = result.model.relation_representations[0](
-    indices=None).cpu().detach().numpy()
-
-
-# # For saved RESCAL model 
-# result = torch.load("experiment\models\rescal_model.pth")
-
-# entity_embeddings = result.entity_representations[0](
+# # Extract the entity and relation embeddings
+# entity_embeddings = result.model.entity_representations[0](
 #     indices=None).cpu().detach().numpy()
-# relation_embeddings = result.relation_representations[0](
+# relation_embeddings = result.model.relation_representations[0](
 #     indices=None).cpu().detach().numpy()
+
+
+# For saved RESCAL model 
+result = torch.load("../models/complex_model.pth")
+
+entity_embeddings = result.entity_representations[0](
+    indices=None).cpu().detach().numpy()
+relation_embeddings = result.relation_representations[0](
+    indices=None).cpu().detach().numpy()
 
 print("Entity Embeddings:\n", entity_embeddings)
 print("Relation Embeddings:\n", relation_embeddings)
@@ -262,10 +262,10 @@ for epoch in range(num_epochs):
             f"[Epoch {epoch}/{num_epochs}] [D loss: {d_loss.item():.4f}] [G loss: {g_loss.item():.4f}]")
 
 # Save the Generator model
-torch.save(generator, 'experiment\models\generator_model.pth')
+torch.save(generator, '../models/generator_model.pth')
 
 # Save the Discriminator model
-torch.save(discriminator, 'experiment\models\discriminator_model.pth')
+torch.save(discriminator, '../models/discriminator_model.pth')
 
 # Generate a new node if the graph is incomplete
 # is_incomplete = True  # Assuming the graph is incomplete for demonstration
