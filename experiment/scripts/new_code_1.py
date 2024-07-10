@@ -88,7 +88,7 @@ if training is None:
 
 
 # For saved RESCAL model 
-result = torch.load("../models/transe_model.pth")
+result = torch.load("../models/complex_model.pth")
 
 entity_embeddings = result.entity_representations[0](
     indices=None).cpu().detach().numpy()
