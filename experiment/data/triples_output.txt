@@ -1,0 +1,461 @@
+head,relation,tail
+salt tolerance,Jasmonate ( JA ) signaling,inhibits
+HvOPR2,opda reductase3,activates
+OPR3,CK,inhibits
+grape genotypes,AGC kinase,interacts
+opda reductase3,AGC kinase,interacts
+free salicylic acid,AGC kinase,interacts
+rice,AGC kinase,interacts
+WSNLKKVILLKRFVKSL,BAP,inhibits
+LOC_Os09g02650,fatty acids,activates
+LOC_Os09g02650,GUS,activates
+LOC_Os09g02650,GID1 molecule,activates
+LOC_Os09g02650,AaGSW1,activates
+fatty acids,AaMYC2/AabZIP1,is-in
+GUS,AaMYC2/AabZIP1,is-in
+GID1 molecule,AaMYC2/AabZIP1,is-in
+AaGSW1,AaMYC2/AabZIP1,is-in
+LOC_Os09g02650,caterpillars,activates
+LOC_Os09g02650,JA,activates
+LOC_Os09g02650,,,activates
+growth and,rice,interacts
+growth and,induce,interacts
+barley,2-hydroxyethyl jasmonate,inhibits
+grapevine,of soybean,is-in
+binding proteins,Fol susceptibility,interacts
+Vitis genotypes,Fol susceptibility,interacts
+HvOPR2,OsCDPK1,interacts
+lipase action,G. barbadense,interacts
+lipase action,ISR,interacts
+lipase action,nicotine biosynthesis,interacts
+hybrid rice grain,jasmonic acid,activates
+GID1-SLR1 interaction,jasmonic acid,activates
+JAs,jasmonic acid,activates
+SA,found,is-in
+SA,fungal-infected opr3,inhibits
+SA,BPH-induced JA , jasmonoyl-isoleucine ( JA-Ile ) , and H(2)O(2 ),activates
+SA,,inhibits
+corn seeds,most of,inhibits
+corn seeds,rbohDF mutants,inhibits
+among,tannin,is-in
+among,JA , ethylene , and H(2)O(2 ) pathways,interacts
+among,CaMV infection,is-in
+tannin, ,interacts
+13(S)-hydroperoxolinolenic acid,wheat,produces
+cerato-platanin protein,wheat,produces
+12-Oxo-phytodienoic acid,wheat,produces
+oxylipins,oat cultivars,is-in
+LSW17S,E. salsugineum water-treated leaves,is-in
+vascular tissue,cell death program,interacts
+acetylcholinesterase,allow for metabolite and,interacts
+acetylcholinesterase,salt,interacts
+evident in,HvOPR2,inhibits
+MPO,jasmonic acid,interacts
+Ca2 + chelator,dehydrogenase , UDP-sulphoquinovose,is-in
+GA3,dehydrogenase , UDP-sulphoquinovose,is-in
+salicylic acid,dehydrogenase , UDP-sulphoquinovose,is-in
+SA,dehydrogenase , UDP-sulphoquinovose,is-in
+IAA,dehydrogenase , UDP-sulphoquinovose,is-in
+ADP-GLUCOSE PYROPHOSPHORYLASE LARGE SUBUNIT2,dehydrogenase , UDP-sulphoquinovose,is-in
+N-methylputrescine,dehydrogenase , UDP-sulphoquinovose,is-in
+SA,MYC2,interacts
+GA3,tobacco roots,interacts
+tobacco roots,AhBBI transcripts,interacts
+tobacco roots,ET,interacts
+tobacco roots,gibberellic acid (GA)-induced expression,interacts
+LSW17S,OXI1,interacts
+IAA,plant-specific hydrophilic transcriptional factor,is-in
+sesquiterpene lactone,plant-specific hydrophilic transcriptional factor,is-in
+PR2,methyl jasmonate,is-in
+aos,PLA2 activation,is-in
+ginsenosides,PLA2 activation,is-in
+OsCDPK1,PLA2 activation,is-in
+ethylene pathway,anthocyanin-free cells,inhibits
+anthocyanin-free cells,jasmonic acid metabolism,interacts
+anthocyanin-free cells,G. barbadense,interacts
+LOC_Os09g02650,, heat shock protein,interacts
+LOC_Os09g02650,Jekyll,interacts
+LOC_Os09g02650,,interacts
+BRs,NDO-2,interacts
+Oxophytodienoate reductases,Aux/IAA,inhibits
+found,JA,is-in
+,ribosylated forms,interacts
+ribosylated forms,Ri-1,interacts
+AaMYC2/AabZIP1,jasmonate signaling,interacts
+AaMYC2/AabZIP1,Arabidopsis thaliana resistance,interacts
+Arabidopsis thaliana resistance,jasmonate signaling,inhibits
+SA-dependent , NPR1-independent host responses,Arabidopsis thaliana resistance,interacts
+Puccinia graminis f. sp. tritici,Fusarium head blight,produces
+Puccinia graminis f. sp. tritici,TIR-NBS-LRR,inhibits
+gs9 - 1,most of,is-in
+uidA,elicitor-induced NO generation and JA accumulation,inhibits
+nsLTPs mRNA accumulation,elicitor-induced NO generation and JA accumulation,inhibits
+uidA,SRD1 promoter activity,inhibits
+nsLTPs mRNA accumulation,SRD1 promoter activity,inhibits
+rice,Aux/IAA and ARF genes,interacts
+IAA,Aux/IAA and ARF genes,interacts
+JAs,elicitor-induced NO generation and JA biosynthesis,inhibits
+infectious CaMV DNA,elicitor-induced NO generation and JA biosynthesis,inhibits
+ET,Xoo,interacts
+ROS,melatonin-mediated flowering,activates
+P450 - 3,Sodium-nitroprusside-induced hypericin production,inhibits
+hormone treatments,NO-induced hypericin production,interacts
+gibberellin-induced growth,H. perforatum cells,is-in
+JA biosynthesis,H. perforatum cells,is-in
+elicitor-induced NO generation,H. perforatum cells,is-in
+acid,GA1 ) and,interacts
+acid,35S : HvTPR,interacts
+35S : HvTPR,GA1 ) and,interacts
+elicitor-induced NO generation,JA biosynthesis,interacts
+JA biosynthesis,gibberellin-induced growth,interacts
+elicitor-induced NO generation,gibberellin-induced growth,interacts
+mitogen-activated protein ( MAP ) kinases,alpha-linolenic acid,is-in
+CO2,oxylipin production,inhibits
+GA(3 ),sly1,activates
+ISR,sly1,activates
+NtPat1,sly1,activates
+NtPat2,sly1,activates
+anthocyanin-free cells,HvOPR2 gene,is-in
+acid,significant increase in alanine aminotransferase ( ALT ) and aspartate transaminase (,activates
+acid,significant increment,activates
+acid,rice,activates
+acid,induce,activates
+acid,significant decrements in superoxide dismutase ( SOD ) , catalase ( CAT ) , and glutathione peroxidase ( GPx,inhibits
+toxicity,use of NsL.oil,inhibits
+Auxin,Cucumis sativus L.,interacts
+ABA,Cucumis sativus L.,interacts
+GbaNA1,ADA activity,is-in
+Botrytis cinerea strain 2100 infection,MoSM1,is-in
+salt,OPDA,interacts
+ginsenosides,OPDA,interacts
+ginsenosides,CK,interacts
+salt,CK,interacts
+ginsenosides,GA,interacts
+salt,GA,interacts
+TOPLESS,ethylene,activates
+TOPLESS,ethylene,activates
+GA,ethylene,inhibits
+GA,ethylene,inhibits
+phosphatidylcholine,JA and salicylic acid ( SA ) responses,is-in
+salicylic,JA and salicylic acid ( SA ) responses,is-in
+BRs,JA and salicylic acid ( SA ) responses,is-in
+NPR1,JA and salicylic acid ( SA ) responses,is-in
+aphids,JA and salicylic acid ( SA ) responses,is-in
+barley defense/response,) showed the,is-in
+hydrogen peroxide,gul3 - 1D,inhibits
+BR,GA4,interacts
+immunohistochemical,desaturase gene,inhibits
+immunohistochemical,DWF4 expression,inhibits
+Auxin,2-hydroxyethyl jasmonate,inhibits
+2-hydroxyethyl jasmonate,sesquiterpene lactone,is-in
+Auxin,jasmonoyl-L-isoleucine,activates
+Auxin,MPO,activates
+ABA,trichome-specific transcription factors,inhibits
+trichome-specific transcription factors,B. cinerea infection,is-in
+,JA,inhibits
+,,CaMV infection,inhibits
+ROS,Cd-induced toxicity symptoms , growth inhibition , and photosynthesis disturbances,inhibits
+to,NaCl is,inhibits
+to,contents,interacts
+to,well,interacts
+NaCl is,of Cd,is-in
+cyanidin,maize insect resistance 1-cysteine protease,interacts
+cyanidin,LSW17S,interacts
+AGC kinase,auxin,activates
+GbaNA1,rhizome formation,interacts
+BES1,2alpha-hydroxylated compound GA40,is-in
+pPLAIIα,2alpha-hydroxylated compound GA40,is-in
+BES1,Mir1-CP accumulation,interacts
+BES1,mir1 transcript expression,interacts
+SA,Fusarium wilt,is-in
+rice pathogenesis-related protein OsPR10a,Fusarium wilt,is-in
+auxin,Arabidopsis,is-in
+bacterial two-component response regulators,Arabidopsis ecotype Col-0,is-in
+allene oxides,evident in,activates
+CK,evident in,activates
+aos,abscisic acid,interacts
+Auxin,Arabidopsis thaliana wound and defence responses , pollen development , and stress-related growth inhibition,interacts
+ABA,Arabidopsis thaliana wound and defence responses , pollen development , and stress-related growth inhibition,interacts
+methyl jasmonate,auxin,interacts
+methyl jasmonate,ethylene production,interacts
+methyl jasmonate,Panax notoginseng,produces
+auxin,Panax notoginseng,produces
+ethylene production,Panax notoginseng,produces
+tobacco leaves,myeloperoxidase,interacts
+12-oxophytodienoic and jasmonic acids,MPO1 protein,interacts
+SLR1,UGRdGT,interacts
+leucine-rich repeat domains,fungal-infected opr3,interacts
+or,and,interacts
+Ri-1,Fatty acids,interacts
+Ri-1,rust resistance,interacts
+SA,,produces
+GUS,UDP-GLUCOSYL TRANSFERASE 74B1,interacts
+GUS,activated around 12 hai,produces
+lipase action,methyl jasmonate,inhibits
+lipase action,cabbage loopers,inhibits
+S. exigua,TIFY family genes,activates
+S. exigua,, cis-5-caffeoylquinic,activates
+salicylic acid and jasmonic acid ( JA ) signaling pathways,G. barbadense,interacts
+G. barbadense,salicylic acid,inhibits
+salicylic acid,salicylic acid or jasmonic acid mediated-defence response,inhibits
+salicylic acid,gene,activates
+salicylic acid,JEKYLL,activates
+salicylic acid,OsCDPK1,activates
+salicylic acid,phytohormone jasmonate,interacts
+salicylic acid,protein ),interacts
+NO(2)-triggered B. cinerea resistance,SRD1 promoter,interacts
+NO(2)-triggered B. cinerea resistance,amino acid metabolism,interacts
+NO(2)-triggered B. cinerea resistance,HvOPR2,interacts
+NO(2)-triggered B. cinerea resistance,MJA,interacts
+NO(2)-triggered B. cinerea resistance,rbohDF mutants,interacts
+opda reductase3,JA- and NO-related biosynthetic and signaling component genes,activates
+blast disease,nicotine biosynthesis,interacts
+SA,blast disease,inhibits
+JA production,blast disease,inhibits
+AaGSW1,blast disease,inhibits
+Hai 7124,fatty acid chain,inhibits
+NtPat2,JA-dependent RKN defense pathway,interacts
+jasmonate,protease inhibitor 2 ( PI2 ) gene expression,activates
+HEJA,protease inhibitor 2 ( PI2 ) gene expression,activates
+GID1 molecule,MTF ETHYLENE RESPONSE FACTOR.C3,interacts
+MTF ETHYLENE RESPONSE FACTOR.C3,,,inhibits
+Artemisia annua,MoSM1,is-in
+,rice pathogenesis-related 10,interacts
+,jasmonate ( JA ) biosynthesis and signaling,interacts
+,lipid metabolism,interacts
+DIR1 ,,PLA2 activity,interacts
+foolish-seedling disease,PLA2 activity,interacts
+ABA,N-methylputrescine,is-in
+ABA,ch1 mutant,interacts
+SRD1,Adenosine deaminase,interacts
+HvOPR2,Adenosine deaminase,interacts
+gibberellic acid effect,Adenosine deaminase,interacts
+HvOPR2,AGC kinase,interacts
+gibberellic acid effect,AGC kinase,interacts
+SRD1,AGC kinase,interacts
+aos,abscisic acid,is-in
+nicotine biosynthetic genes,aglycone [17,17 - 2H2]GA20,interacts
+MYC2-targeted JA-responsive genes,auxin,interacts
+jasmonic acid,class III plant peroxidases,is-in
+GA3,jasmonic acid,is-in
+bes1- D,AabZIP1,is-in
+bes1- D,wheatgrass,is-in
+ET,Summer black,is-in
+Oxophytodienoate reductases,HEJA,produces
+Oxophytodienoate reductases,phytohormones,produces
+HEJA,Cauliflower mosaic virus,inhibits
+phytohormones,Cauliflower mosaic virus,inhibits
+GID1-GA complex,salt,is-in
+GID1-GA complex,SLENDER RICE1,interacts
+jasmonic acid,gibberellic acid effect,is-in
+fatty acid chain,jasmonic acid,activates
+fatty acid chain,ZIM genes,activates
+fatty acid chain,jasmonic acid,inhibits
+dihybrid rice Ri-1/OsPR10a-Ox,GbaNA1,produces
+dihybrid rice Ri-1/OsPR10a-Ox,NtPat1,produces
+HEJA,ethylene pathway,interacts
+HEJA,rust resistance,interacts
+ethylene pathway,rust resistance,interacts
+HEJA,pPLAIIα,is-in
+ethylene pathway,pPLAIIα,is-in
+rust resistance,pPLAIIα,is-in
+SA/JA biosynthesis,melatonin-mediated flowering,activates
+melatonin-mediated flowering,SLR1 interaction,inhibits
+α-ocimene,pathways dependent,activates
+pathways dependent,salicylic,is-in
+pathways dependent,SRD1 promoter,inhibits
+white-backed planthopper ( WBPH ) Sogatella furcifera gravid females,Arabidopsis seedlings,activates
+white-backed planthopper ( WBPH ) Sogatella furcifera gravid females,BChE,activates
+white-backed planthopper ( WBPH ) Sogatella furcifera gravid females,wheat,activates
+white-backed planthopper ( WBPH ) Sogatella furcifera gravid females,barley,activates
+white-backed planthopper ( WBPH ) Sogatella furcifera gravid females,rhizome formation,activates
+white-backed planthopper ( WBPH ) Sogatella furcifera gravid females,myeloperoxidase,inhibits
+white-backed planthopper ( WBPH ) Sogatella furcifera gravid females,opr3,activates
+white-backed planthopper ( WBPH ) Sogatella furcifera gravid females,ISR,activates
+Arabidopsis seedlings,MPO,is-in
+BChE,MPO,is-in
+wheat,MPO,is-in
+barley,MPO,is-in
+rhizome formation,MPO,is-in
+NBS-LRR genes,ROS,activates
+ginsenosides,GA3,is-in
+TMV,GA3,is-in
+oxi1,GA3,is-in
+transgenic Arabidopsis,GA3,is-in
+brown planthopper Nilaparvata lugens gravid females,SA,interacts
+NtPat2,WBPH female adults,inhibits
+NtPat1,WBPH female adults,inhibits
+ISR,WBPH female adults,inhibits
+WSNLKKVILLKRFVKSL,WBPH female adults,inhibits
+WBPH- or BPH-induced biosynthesis,SA,produces
+,AaGSW1,inhibits
+WBPH- or BPH-induced biosynthesis,ROS,is-in
+AaGSW1,CYP71AV1,interacts
+monogalloyl glucose tannins,N signaling,interacts
+monogalloyl glucose tannins,formation of,interacts
+G. barbadense,CK,interacts
+ISR,CK,interacts
+SA-deficient mutant plants,G. barbadense,interacts
+ethylene,ISR,interacts
+SA-deficient mutant plants,ISR,interacts
+ethylene,G. barbadense,interacts
+water,MJA,is-in
+TMV,MJA,is-in
+ginsenosides,MJA,is-in
+ginsenosides,B. cinerea,is-in
+TMV,B. cinerea,is-in
+water,B. cinerea,is-in
+jasmonic acid and ethylene signaling,S. exigua,interacts
+GA3,dihydroartemisinic acid,interacts
+AabZIP1,dihydroartemisinic acid,interacts
+AhBBI transcripts,( A. thaliana ) allene oxide synthase,inhibits
+for,Fol susceptibility,interacts
+for,ULGCS cotyledons,interacts
+35S : HvTPR,for,interacts
+the,CW integrity maintenance,interacts
+changed,CW integrity maintenance,interacts
+ROS,CW integrity maintenance,interacts
+wheat,MeJA,is-in
+wheat,jasmonic acid,is-in
+GA,salicylic acid,interacts
+GA,SA,interacts
+GA,,interacts
+GA,aos,interacts
+vegetative,Aux/IAA and ARF genes,is-in
+JA,BAP,interacts
+JA,MYC2,interacts
+JA,AabZIP1,interacts
+JA,MoSM1-OE plants,interacts
+JA,JA,interacts
+JA,SA,interacts
+JA,OsCDPK1,interacts
+BAP,oxygenated fatty acids,is-in
+MYC2,oxygenated fatty acids,is-in
+AabZIP1,genetic resource distinct,is-in
+MoSM1-OE plants,structure analysis ,,is-in
+JA,jasmonic acid metabolism,is-in
+SA,jasmonic acid metabolism,is-in
+OsCDPK1,,is-in
+ZmCLA4 regulatory network,AaMYC2/AabZIP1,is-in
+rhizospheric bacterial isolate SBP-9,Chinese cabbage,interacts
+trienoic acids,myeloperoxidase,interacts
+,NtPat2,activates
+Stenotrophomonas maltophilia SBP-9,wheat growth,activates
+Stenotrophomonas maltophilia SBP-9,water,interacts
+GA3,oxylipins,inhibits
+butrylcholinesterase,microRNA156 (miR156)-targeted SQUAMOSA PROMOTER BINDING-LIKE ( SPL ) transcription factors,interacts
+microRNA156 (miR156)-targeted SQUAMOSA PROMOTER BINDING-LIKE ( SPL ) transcription factors,pathogenesis-related ( PR ) proteins,activates
+ISR,opr3,interacts
+opr3,nicotine biosynthetic genes,inhibits
+opr3,ethylene,inhibits
+opr3,MADS box genes,inhibits
+opr3,rice innate immunity,inhibits
+flavin-dependent oxidoreductases,Aux/IAA,is-in
+ET,TOPLESS,activates
+OPDA,OPR,activates
+SLR1,OPR,activates
+SA,OPR,activates
+HEJA,SA,activates
+LSW17S,SA,activates
+tomato,GH19 endochitinase protein,produces
+GH19 endochitinase protein,Gy 3,is-in
+GH19 endochitinase protein,membrane lipids,is-in
+allene oxides,CoA ligase,activates
+phospholipase A2,CoA ligase,activates
+Wistar albino rats,CoA ligase,activates
+Empoasca ( Matsumurasca ) onukii,CoA ligase,activates
+G. barbadense,CoA ligase,activates
+phosphatidic acid,CoA ligase,activates
+PA,CoA ligase,activates
+G. barbadense,CoA ligase,activates
+NtPat2,MoSM1-OE plants,inhibits
+hydrogen peroxide,opr3,activates
+hydrogen peroxide,JA signaling,activates
+JA accumulation,opr3,activates
+JA accumulation,JA signaling,activates
+JA accumulation,hydrogen peroxide,interacts
+OsEDR1-suppressing/knockout ( KO ) plants,Xanthomonas oryzae pv . oryzae,inhibits
+OsEDR1-suppressing/knockout ( KO ) plants,rats,inhibits
+Xanthomonas oryzae pv . oryzae,cyclopentenone 12-oxo-10,15(Z)-phytodienoic acid,produces
+rats,cyclopentenone 12-oxo-10,15(Z)-phytodienoic acid,produces
+ISR,pinene,produces
+G. barbadense,pinene,produces
+Hai 7124,oxi1,inhibits
+ACC synthase ( ACS ) gene family ,,JAs,interacts
+ACC synthase ( ACS ) gene family ,,ethylene perception,is-in
+GA(3 ),NtPat2,interacts
+NtPat3,SA and JA biosynthesis,inhibits
+SA and JA biosynthesis,anthocyanin-free cells,is-in
+BES1,ribosylated forms,inhibits
+BES1,JA-insensitive coi1 - 16 mutant,activates
+JA-insensitive coi1 - 16 mutant,tolerance and,is-in
+PGRs,cereal sexual reproduction,is-in
+of,SA- and JA-associated defence signalling,inhibits
+MoSM1,of,activates
+MoSM1,foolish-seedling disease,is-in
+tobacco MPO1,oat cultivars,is-in
+gibberellic acid effect,Merlot,activates
+Merlot,PR1,is-in
+Merlot,tobacco leaves,is-in
+Merlot,tobacco mosaic virus,inhibits
+Merlot,NBS-LRR genes,inhibits
+SA-independent but jasmonic acid/ethylene-modulated signal transduction pathway,Diethyldithiocarbamic acid,interacts
+, and,ethylene perception,activates
+SA-deficient mutant,,activates
+SA-deficient mutant,the early phenylpropanoid,activates
+Jekyll,,activates
+Jekyll,the early phenylpropanoid,activates
+SA,levels of the,inhibits
+GUS,cereal sexual reproduction,inhibits
+combination of factors,ULGCS cotton,activates
+combination of factors,SA-responsive gene expression,interacts
+, ,is-in
+maize,Maize ( Zea mays L. ) suspension-cultured cells,is-in
+,helix-loop-helix family ,,is-in
+helix-loop-helix family ,,highly branched and cross-linked arabinoxylans,activates
+helix-loop-helix family ,,phospholipase A2,activates
+helix-loop-helix family ,,PLA2,activates
+helix-loop-helix family ,,salicylic acid,activates
+T. urticae HIPVs,the responsive,activates
+ethylene perception,cellulose-deficient cell walls,is-in
+AhBBI transcripts,ET,is-in
+abscisic acid,bean leaves,interacts
+JA,wound-induced proteinase inhibitor ( pin ) expression,inhibits
+SA-deficient mutant,wound-induced proteinase inhibitor ( pin ) expression,inhibits
+Jekyll,wound-induced proteinase inhibitor ( pin ) expression,inhibits
+rhizome formation,N- and other R-gene-mediated defense,inhibits
+NtPat genes,G. hirsutum,activates
+H(2)O(2 ) accumulation,protein kinases,is-in
+Auxin,Streptomyces sp. ZX01,is-in
+salt tolerance,maize,inhibits
+maize,Ilyonectria mors-panacis,interacts
+Ca(2 + ) influx,NBS-LRR genes,is-in
+Arabidopsis seedlings,NBS-LRR genes,is-in
+grape genotypes,NBS-LRR genes,is-in
+CORONITINE INSENSITIVE 1,NBS-LRR genes,is-in
+H+ uptake,NBS-LRR genes,is-in
+OsCDPK1,NBS-LRR genes,is-in
+GA,reactive oxygen species ( ROS ) production and scavenging,activates
+JA,OXI1-dependent response,activates
+,,phosphatidylcholine,activates
+,,salicylic,activates
+N-half tetratricopeptide repeat ( TPR ) domain,Auxin,is-in
+M(3 ) plants,Auxin,is-in
+abscisic acid,N-half tetratricopeptide repeat ( TPR ) domain,is-in
+N-half tetratricopeptide repeat ( TPR ) domain,ABA,is-in
+M(3 ) plants,ABA,is-in
+DC3000,GA signaling,inhibits
+HEJA,HTHH-induced suppression of,inhibits
+jasmonate,HTHH-induced suppression of,inhibits
+HvOPR2,jasmonic acid biosynthesis,is-in
+TPRs 6 , 8 and 9,Chinese cabbage,interacts
+TPRs,SPY activity,interacts
+salicylic acid (SA)-induced protein kinase,Arabidopsis,is-in
+Aux/IAA,Arabidopsis,is-in
+wounding-induced protein kinase,Arabidopsis,is-in
+MoSM1,Arabidopsis,is-in
+set,TOPLESS,activates
+barley,TOPLESS,activates
+ET,water,activates
+salicylic acid,water,activates
+IAA,UDPG-ginsenoside Rd glucosyltransferase,is-in
