@@ -21,7 +21,7 @@ from torch.nn.parameter import Parameter
 from functional import LinearWeightNorm
 
 triples = []
-file_name = "experiment\data\triples.txt"
+file_name = "../data/triples.txt"
 
 with open(file_name, 'r') as file:
     file_content = file.read()
@@ -34,7 +34,7 @@ with open(file_name, 'r') as file:
 triples_array = np.array(triples)
 triples_factory = TriplesFactory.from_labeled_triples(triples_array)
 
-result = torch.load("experiment\models\rescal_model.pth", map_location=torch.device('cuda'))
+result = torch.load("../models/rescal_model.pth", map_location=torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
 
 entity_embeddings = result.entity_representations[0](indices=None).cpu().detach().numpy()
 relation_embeddings = result.relation_representations[0](indices=None).cpu().detach().numpy()
@@ -104,7 +104,7 @@ def train():
     return loss
 
 # saving the model
-torch.save(model, "experiment\models\gcn_model_1.pth")
+torch.save(model, "../models/gcn_model_1.pth")
 
 @torch.no_grad()
 def test(data):
@@ -171,7 +171,7 @@ class Generator(nn.Module):
         return self.original_generator(noise.size(0), noise.is_cuda)
 
 embedding_dim = entity_embeddings.shape[1]
-generator = torch.load("experiment\models\generator_model_2.pth").to(device)
+generator = torch.load("../models/generator_model_2.pth").to(device)
 
 with torch.no_grad():
     model.eval()
