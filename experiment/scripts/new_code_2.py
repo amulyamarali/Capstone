@@ -77,7 +77,7 @@ if training is None:
     print("Failed to split triples. Exiting.")
     exit(1)
 
-# Define the RESCAL model and train it using the pipeline
+# ******************** Define the RESCAL model and train it using the pipeline *************************
 # result = pipeline(
 #     model='RESCAL',
 #     training=training,
