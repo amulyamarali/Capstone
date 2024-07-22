@@ -248,21 +248,15 @@ if is_incomplete:
     original_entity = entities[most_similar_node_index]
     print("Original Entity Label:", original_entity)
 
-    G.add_node(new_node[0], feature=new_node[1]['feature'], label=original_entity)
+    G.add_node(new_node[0], feature=new_node[1]['feature'])
     G.add_edge(new_node[0], most_similar_node)
 
     node_colors = []
-    node_labels = {}
     for node in G.nodes():
         if node == new_node[0]:
             node_colors.append('red')
-            node_labels[node] = original_entity
         else:
             node_colors.append('lightblue')
-            node_labels[node] = entities[node]
 
-    pos = nx.spring_layout(G)
-    nx.draw(G, pos, with_labels=True, labels=node_labels, node_color=node_colors, node_size=2000, font_size=10)
-    edge_labels = nx.get_edge_attributes(G, 'label')
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+    nx.draw(G, with_labels=True, node_color=node_colors)
     plt.show()

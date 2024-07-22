@@ -273,9 +273,11 @@ class Generator(nn.Module):
     def forward(self, noise):
         return self.fc(noise)
 
-# Load the generator model with the correct embedding dimension
+###############################################################
+
 embedding_dim = entity_embeddings.shape[1]
 generator = torch.load("../models/generator_model.pth").to(device)
+
 
 # Function to get key from value
 def get_key_from_value(d, value):
@@ -284,13 +286,16 @@ def get_key_from_value(d, value):
             return k
     return None
 
-# Metric computation
+# Metric computation ***************************************
 precision, recall, f1 = compute_metrics(data)
 print(f"Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}")
+
 
 with torch.no_grad():
     model.eval()
     z = model.encode(data_1.x, data_1.edge_index)
+
+    # new_z = torch.randn(1, embedding_dim).to(device)
 
     sparse_node_embeddings = np.array(
         [nodes[sparse_node][1]['feature'] for sparse_node in sparse_nodes])
@@ -299,15 +304,13 @@ with torch.no_grad():
     mean_sparse_node_embedding = np.mean(sparse_node_embeddings, axis=0)
     new_z = torch.tensor(
         mean_sparse_node_embedding, dtype=torch.float32).unsqueeze(0).to(device)
-
-    print("Shape of new_z before passing to generator:", new_z.shape)
-    
     generated_feature = generator(new_z).detach().cpu().numpy().flatten()
     new_node_feature = torch.tensor(generated_feature, dtype=torch.float, device=device).unsqueeze(0)
 
     new_node = (len(nodes), {'feature': generated_feature})
 
     extended_node_features = torch.cat([data.x, new_node_feature], dim=0)
+
 
     new_node_index = torch.tensor([data.num_nodes], dtype=torch.long, device=device)
     existing_node_indices = torch.arange(data.num_nodes, dtype=torch.long, device=device)
@@ -334,7 +337,10 @@ with torch.no_grad():
 
     print(f"The new node is most likely to link with node {original_node} with the score of {new_edge_predictions[most_likely_link_index]}.")
 
+
 G = nx.Graph()
+# edges = torch.cat([data.edge_index, new_edge_label_index[:,original_node].unsqueeze(1)], dim=1).cpu().numpy()
+# G.add_edges_from(edges.T)
 G.add_nodes_from(nodes)
 G.add_edges_from(edges)
 G.add_node(new_node[0], feature=generated_feature)

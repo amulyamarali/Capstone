@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 # -*- coding: utf-8 -*-
 """Embeddings Metrics.ipynb
 
@@ -9,7 +7,6 @@ Original file is located at
     https://colab.research.google.com/drive/1JO4EXkrYshYkidUWZeC-EWiL39oqWxW7
 """
 
->>>>>>> de52be2bea11dc461b4f6f8d8d4c1d5e64656230
 import torch
 import csv
 
