@@ -14,21 +14,29 @@ from functional import LinearWeightNorm
 # *************** DATA SET RELATED CODE *************** #
 # Define a small set of triples for the dummy knowledge graph
 triples = []
-file_name = "../data/triples.txt"
+file_name = "../data/train_triples.txt"
 
 with open(file_name, 'r') as file:
-    # Read the contents of the file
-    file_content = file.read()
+    for line in file:
+        # Strip whitespace from the line
+        stripped_line = line.strip()
 
-    # Convert the string representation of the list back to an actual list
-    new_data = ast.literal_eval(file_content)
+        # Ensure the line isn't empty
+        if stripped_line:
+            # Convert the string representation of the list back to an actual list
+            try:
+                new_data = ast.literal_eval(stripped_line)
 
-    # Append the new data to the existing list
-    if isinstance(new_data, list):
-        triples.extend(new_data)
-    else:
-        print("The data in the file is not a list.")
+                # Check if the parsed data is a list
+                if isinstance(new_data, list):
+                    # Append the new data to the existing list of triples
+                    triples.append(new_data)
+                else:
+                    print("The data in the file is not a list.")
+            except (ValueError, SyntaxError) as e:
+                print(f"Error parsing line: {stripped_line}. Error: {e}")
 
+                
 # Generate a KG representation using NetworkX
 # Create a directed graph
 G = nx.DiGraph()
