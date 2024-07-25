@@ -8,24 +8,15 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import ast
 
-from torch.nn.parameter import Parameter
-from torch import nn
-from torch.nn import functional as F
-from torch.autograd import Variable
 # Assuming LinearWeightNorm is defined in functional module
 from functional import LinearWeightNorm
 
-
-
-
-
-# *************** DATA SET RELATED CODE *************** # 
+# *************** DATA SET RELATED CODE *************** #
 # Define a small set of triples for the dummy knowledge graph
 triples = []
 file_name = "../data/triples.txt"
 
 with open(file_name, 'r') as file:
-
     # Read the contents of the file
     file_content = file.read()
 
@@ -48,23 +39,19 @@ for head, relation, tail in triples:
 
 # Draw the graph
 pos = nx.spring_layout(G)
-nx.draw(G, pos, with_labels=True, node_size=2000, font_size=10,
-        node_color='lightblue', font_weight='bold', font_color='darkred')
-edge_labels = nx.get_edge_attributes(G, 'label')
-nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
-plt.show()
+# nx.draw(G, pos, with_labels=True, node_size=2000, font_size=10,
+#         node_color='lightblue', font_weight='bold', font_color='darkred')
+# edge_labels = nx.get_edge_attributes(G, 'label')
+# nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+# plt.show()
 
 # Convert the list of triples to a NumPy array
 triples_array = np.array(triples)
-# print("Triples Array:\n", triples_array)
 
 # Create a TriplesFactory from the triples
 triples_factory = TriplesFactory.from_labeled_triples(triples_array)
-# print("Triples Factory:\n", triples_factory)
 
 # Function to safely split triples and handle errors
-
-
 def safe_split(triples_factory, ratios):
     try:
         training, testing = triples_factory.split(ratios)
@@ -73,13 +60,11 @@ def safe_split(triples_factory, ratios):
         print("Error during split:", e)
         return None, None
 
-
 # Attempt to split the triples into training and testing sets
 training, testing = safe_split(triples_factory, [0.8, 0.2])
 if training is None:
     print("Failed to split triples. Exiting.")
     exit(1)
-
 
 # ******************** Define the RESCAL model and train it using the pipeline *************************
 # result = pipeline(
@@ -99,22 +84,21 @@ if training is None:
 # relation_embeddings = result.model.relation_representations[0](
 #     indices=None).cpu().detach().numpy()
 
-
 # For saved RESCAL model 
-result = torch.load("../models/rescal_model.pth")
+result = torch.load("../models/transe_model.pth")
 
 entity_embeddings = result.entity_representations[0](
     indices=None).cpu().detach().numpy()
 relation_embeddings = result.relation_representations[0](
     indices=None).cpu().detach().numpy()
 
-
-
 # Create a simple knowledge graph
 G = nx.Graph()
 
 entities = list(triples_factory.entity_to_id.keys())
 entity_to_id = {entity: idx for idx, entity in enumerate(entities)}
+
+# print("entity_to_id:", entity_to_id)
 
 # Generate the nodes list
 nodes = [(entity_to_id[entity], {
@@ -135,47 +119,185 @@ node_features = np.array([data['feature'] for _, data in G.nodes(data=True)])
 
 # print("Node Features:")
 # print(node_features)
-nx.draw(G, with_labels=True)
-plt.show()
-
+# nx.draw(G, with_labels=True)
+# plt.show()
 
 # *************** SPARSITY DETECTION CODE *************** #
-def gini_index(array):
-    array = np.sort(array)
-    index = np.arange(1, array.shape[0] + 1)
-    print("array:", array)
-    print("index:", index)
-    print("shape:", array.shape[0])
-    n = array.shape[0]
-    return ((2 * np.sum(index * array)) / (n * np.sum(array))) - ((n + 1) / n)
+def calculate_density(G):
+    densities = {}
+    for node in G.nodes:
+        degree = G.degree(node)
+        if G.number_of_nodes() > 1:
+            density = degree / (G.number_of_nodes() - 1)
+        else:
+            density = 0
+        densities[node] = density
+    return densities
+
+densities = calculate_density(G)
+
+# Sort nodes by density in descending order
+sorted_nodes = sorted(densities, key=densities.get, reverse=True)
+
+# Get the top seven densely populated nodes
+top_seven_dense_nodes = sorted_nodes[:7]
+
+# Determine the least densely populated node among the top seven
+least_dense_of_top_seven = min(top_seven_dense_nodes, key=densities.get)
+least_dense_of_top_seven_density = densities[least_dense_of_top_seven]
+
+print("\nTop seven densely populated nodes:", top_seven_dense_nodes)
+print("\nNode densities of top seven:", {node: densities[node] for node in top_seven_dense_nodes})
+print("\nLeast dense node among top seven densely populated nodes:", least_dense_of_top_seven, "with density:", least_dense_of_top_seven_density)
+
+# Highlight the top seven densely populated nodes in yellow
+node_colors = ['yellow' if node in top_seven_dense_nodes else 'lightblue' for node in G.nodes]
+node_sizes = [1000 if node in top_seven_dense_nodes else 100 for node in G.nodes]
+
+# Reposition nodes to ensure top seven densely populated nodes are not overlapped
+pos = nx.spring_layout(G)
+for i, node in enumerate(top_seven_dense_nodes):
+    pos[node] = (pos[node][0], pos[node][1] + 0.1 * i)  # Adjust position to avoid overlap
+
+nx.draw(G, pos, with_labels=True, node_size=node_sizes, font_size=5,
+        node_color=node_colors, font_weight='bold', font_color='darkred')
+edge_labels = nx.get_edge_attributes(G, 'label')
+nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+plt.show()
+
+# *************** FIND SPARSE NODE AND ITS NEIGHBORHOOD EMBEDDINGS *************** #
+# Find the first node with density less than 0.1
+sparse_node = None
+for node in densities:
+    if densities[node] < 0.1:
+        sparse_node = 257
+        break
+
+if sparse_node is not None:
+    print(f"\nFirst node with density less than 0.1: {sparse_node} with density {densities[sparse_node]}")
+    neighbors = list(G.neighbors(sparse_node))
+    print(f"Neighbors of node {sparse_node}:", neighbors)
+    neighbor_embeddings = [entity_embeddings[neighbor] for neighbor in neighbors]
+    
+    print(f"\nNeighborhood embeddings of node {sparse_node}:")
+    for i, embedding in enumerate(neighbor_embeddings):
+        print(f"Neighbor {neighbors[i]}: {embedding}")
+else:
+    print("No node found with density less than 0.1.")
 
 
-# Calculate the degree of each node
-degrees = np.array([G.degree(n) for n in G.nodes])
+# *************** GAN MODEL DEFINITIONS *************** #
+class Generator(nn.Module):
+    def __init__(self, input_dim, output_dim):
+        super(Generator, self).__init__()
+        self.fc = nn.Sequential(
+            nn.Linear(input_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, output_dim)
+        )
 
-# degrees is no.of incoming and outgoing edges for each node
+    def forward(self, x):
+        return self.fc(x)
 
-print("degrees:", degrees)
+class Discriminator(nn.Module):
+    def __init__(self, input_dim):
+        super(Discriminator, self).__init__()
+        self.fc = nn.Sequential(
+            nn.Linear(input_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, 1),
+            nn.Sigmoid()
+        )
 
-# Normalize node degrees
-max_total_degree = np.max(degrees)
-normalized_degrees = degrees / max_total_degree
+    def forward(self, x):
+        return self.fc(x)
 
-# Calculate the Gini index
-gini = gini_index(normalized_degrees)
-print("Gini Index:", gini)
+# *************** HYPERPARAMETERS *************** #
+input_dim = len(neighbor_embeddings[0])
+output_dim = input_dim
+lr = 0.0002
+num_epochs = 300
+batch_size = len(neighbor_embeddings)
 
-# Threshold for Gini index to determine sparsity
-gini_threshold = 0.6  # This threshold can be adjusted
+# Instantiate the models
+generator = Generator(input_dim, output_dim)
+discriminator = Discriminator(output_dim)
 
-is_incomplete = gini > gini_threshold
-print("Is the Knowledge Graph incomplete?", is_incomplete)
+# Optimizers
+optimizer_g = optim.Adam(generator.parameters(), lr=lr)
+optimizer_d = optim.Adam(discriminator.parameters(), lr=lr)
 
-# Identify sparse nodes based on a threshold
-threshold = 0.6 
-sparse_nodes_indices = np.where(normalized_degrees < threshold)[0]
-sparse_nodes = [n for n in sparse_nodes_indices]
+# Loss function
+criterion = nn.BCELoss()
 
-print("\nSparse nodes:", sparse_nodes)
+# Convert neighborhood embeddings to tensor
+real_data = torch.tensor(neighbor_embeddings, dtype=torch.float)
+
+# *************** TRAINING THE GAN *************** #
+for epoch in range(num_epochs):
+    # Train discriminator
+    optimizer_d.zero_grad()
+
+    # Real data
+    real_labels = torch.ones(batch_size, 1)
+    outputs = discriminator(real_data)
+    d_loss_real = criterion(outputs, real_labels)
+
+    # Fake data
+    noise = torch.randn(batch_size, input_dim)
+    fake_data = generator(noise)
+    fake_labels = torch.zeros(batch_size, 1)
+    outputs = discriminator(fake_data.detach())
+    d_loss_fake = criterion(outputs, fake_labels)
+
+    d_loss = d_loss_real + d_loss_fake
+    d_loss.backward()
+    optimizer_d.step()
+
+    # Train generator
+    optimizer_g.zero_grad()
+
+    noise = torch.randn(batch_size, input_dim)
+    fake_data = generator(noise)
+    outputs = discriminator(fake_data)
+    g_loss = criterion(outputs, real_labels)
+
+    g_loss.backward()
+    optimizer_g.step()
+
+    if epoch % 10 == 0:
+        print(f"Epoch [{epoch}/{num_epochs}] | D Loss: {d_loss.item()} | G Loss: {g_loss.item()}")
+
+# Generate a new node embedding
+with torch.no_grad():
+    noise = torch.randn(1, input_dim)
+    new_node_embedding = generator(noise).numpy().flatten()
+
+print("\nGenerated embedding for the new node:")
+print(new_node_embedding)
 
 
+# *************** FIND NEAREST EXISTING NODE (cosine similarity) *************** #
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Compute cosine similarity between new node embedding and existing node embeddings
+existing_embeddings = np.array([data['feature'] for _, data in G.nodes(data=True)])
+cos_similarities = cosine_similarity([new_node_embedding], existing_embeddings).flatten()
+
+# Find the index of the nearest existing node
+nearest_idx = np.argmax(cos_similarities)
+nearest_node = list(G.nodes)[nearest_idx]
+
+# Decode the real-world name of the nearest existing node
+# Here we assume that node names are stored in the 'real_name' attribute in the graph
+# Adjust this according to your actual attribute names or data
+
+sparse_node = entities[sparse_node]
+print(f"\nSparse node: {sparse_node}")
+
+real_name_of_nearest_node = entities[nearest_node]  # Adjust this line if you have a mapping
+
+print(f"\nNearest existing node to the generated node is {nearest_node} with cosine similarity: {cos_similarities[nearest_idx]}")
+
+# Assuming node names are directly mapped to their IDs
+print(f"Real-world name of the nearest node: {real_name_of_nearest_node}")
