@@ -64,38 +64,52 @@ if training is None:
     print("Failed to split triples. Exiting.")
     exit(1)
 
-# Define the HolE model and train it using the pipeline
-result_hole = pipeline(
-    model='HolE',
+# # Define the HolE model and train it using the pipeline
+# result_hole = pipeline(
+#     model='HolE',
+#     training=training,
+#     testing=testing,
+#     training_kwargs=dict(num_epochs=100, batch_size=2),
+#     optimizer_kwargs=dict(lr=0.01),
+# )
+
+# # Save the HolE embedding model
+# torch.save(result_hole.model, '../models/hole_model.pth')
+
+# # Define the ComplEx model and train it using the pipeline
+# result_complex = pipeline(
+#     model='ComplEx',
+#     training=training,
+#     testing=testing,
+#     training_kwargs=dict(num_epochs=100, batch_size=2),
+#     optimizer_kwargs=dict(lr=0.01),
+# )
+
+# # Save the ComplEx embedding model
+# torch.save(result_complex.model, '../models/complex_model.pth')
+
+# # Define the ConvE model and train it using the pipeline
+# result_conve = pipeline(
+#     model='ConvE',
+#     training=training,
+#     testing=testing,
+#     training_kwargs=dict(num_epochs=100, batch_size=2),
+#     optimizer_kwargs=dict(lr=0.01),
+# )
+
+# # Save the ConvE embedding model
+# torch.save(result_conve.model, '../models/conve_model.pth')
+
+
+
+# Train the RotatE model
+result = pipeline(
+    model='RotatE',
     training=training,
     testing=testing,
-    training_kwargs=dict(num_epochs=100, batch_size=2),
-    optimizer_kwargs=dict(lr=0.01),
+    training_kwargs=dict(num_epochs=100, batch_size=64),  # Adjust hyperparameters as needed
+    optimizer_kwargs=dict(lr=0.01),  # Learning rate
 )
 
-# Save the HolE embedding model
-torch.save(result_hole.model, '../models/hole_model.pth')
-
-# Define the ComplEx model and train it using the pipeline
-result_complex = pipeline(
-    model='ComplEx',
-    training=training,
-    testing=testing,
-    training_kwargs=dict(num_epochs=100, batch_size=2),
-    optimizer_kwargs=dict(lr=0.01),
-)
-
-# Save the ComplEx embedding model
-torch.save(result_complex.model, '../models/complex_model.pth')
-
-# Define the ConvE model and train it using the pipeline
-result_conve = pipeline(
-    model='ConvE',
-    training=training,
-    testing=testing,
-    training_kwargs=dict(num_epochs=100, batch_size=2),
-    optimizer_kwargs=dict(lr=0.01),
-)
-
-# Save the ConvE embedding model
-torch.save(result_conve.model, '../models/conve_model.pth')
+# Save the RotatE model
+torch.save(result.model, '../models/rotate_model.pth')
