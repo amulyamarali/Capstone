@@ -85,7 +85,7 @@ if training is None:
 #     indices=None).cpu().detach().numpy()
 
 # For saved RESCAL model 
-result = torch.load("../models/transe_model.pth")
+result = torch.load("../models/complex_model.pth")
 
 entity_embeddings = result.entity_representations[0](
     indices=None).cpu().detach().numpy()
@@ -282,26 +282,27 @@ print(new_node_embedding)
 
 
 # *************** FIND NEAREST EXISTING NODE (cosine similarity) *************** #
-from sklearn.metrics.pairwise import cosine_similarity
+# Convert neighborhood embeddings and new node embedding to real values by using their magnitudes
+real_neighbor_embeddings = np.abs(np.array(neighbor_embeddings))
+real_new_node_embedding = np.abs(np.array(new_node_embedding))
 
 # Compute cosine similarity between new node embedding and existing node embeddings
 existing_embeddings = np.array([data['feature'] for _, data in G.nodes(data=True)])
-cos_similarities = cosine_similarity([new_node_embedding], existing_embeddings).flatten()
+real_existing_embeddings = np.abs(existing_embeddings)
+
+from sklearn.metrics.pairwise import cosine_similarity
+cos_similarities = cosine_similarity([real_new_node_embedding], real_existing_embeddings).flatten()
 
 # Find the index of the nearest existing node
 nearest_idx = np.argmax(cos_similarities)
 nearest_node = list(G.nodes)[nearest_idx]
 
-# Decode the real-world name of the nearest existing node
-# Here we assume that node names are stored in the 'real_name' attribute in the graph
-# Adjust this according to your actual attribute names or data
-
 sparse_node = entities[sparse_node]
 print(f"\nSparse node: {sparse_node}")
 
-real_name_of_nearest_node = entities[nearest_node]  # Adjust this line if you have a mapping
-
+# Decode the real-world name of the nearest existing node
+# Assuming node names are directly mapped to their IDs
 print(f"\nNearest existing node to the generated node is {nearest_node} with cosine similarity: {cos_similarities[nearest_idx]}")
 
-# Assuming node names are directly mapped to their IDs
+real_name_of_nearest_node = entities[nearest_node]  # Adjust this line if you have a mapping
 print(f"Real-world name of the nearest node: {real_name_of_nearest_node}")
