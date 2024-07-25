@@ -85,7 +85,7 @@ if training is None:
 #     indices=None).cpu().detach().numpy()
 
 # For saved RESCAL model 
-result = torch.load("../models/rotate_model.pth")
+result = torch.load("../models/complex_model.pth")
 
 entity_embeddings = result.entity_representations[0](
     indices=None).cpu().detach().numpy()
@@ -170,7 +170,7 @@ plt.show()
 sparse_node = None
 for node in densities:
     if densities[node] < 0.1:
-        sparse_node = 258
+        sparse_node = node
         break
 
 if sparse_node is not None:
@@ -215,7 +215,7 @@ class Discriminator(nn.Module):
 # *************** HYPERPARAMETERS *************** #
 input_dim = len(neighbor_embeddings[0])
 output_dim = input_dim
-lr = 0.0002
+lr = 0.001
 num_epochs = 1000
 batch_size = len(neighbor_embeddings)
 

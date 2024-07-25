@@ -170,7 +170,7 @@ plt.show()
 sparse_node = None
 for node in densities:
     if densities[node] < 0.1:
-        sparse_node = 257
+        sparse_node = node
         break
 
 if sparse_node is not None:
@@ -215,7 +215,7 @@ class Discriminator(nn.Module):
 # *************** HYPERPARAMETERS *************** #
 input_dim = len(neighbor_embeddings[0])
 output_dim = input_dim
-lr = 0.0002
+lr = 0.001
 num_epochs = 1000
 batch_size = len(neighbor_embeddings)
 
@@ -293,7 +293,7 @@ neighbor_data = torch.tensor(neighbor_embeddings, dtype=torch.float)
 # Generate a new node embedding
 with torch.no_grad():
     noise = torch.randn(1, input_dim)
-    new_node_embedding = generator(noise).numpy().flatten()
+    new_node_embedding = generator(neighbor_data).numpy().flatten()
 
 print("\nGenerated embedding for the new node:")
 print(new_node_embedding)

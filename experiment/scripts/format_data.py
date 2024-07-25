@@ -1,4 +1,4 @@
-file_path = '../data/all_triples.txt'
+file_path = '../data/updated_triples.txt'
 
 # Initialize an empty list to store the tuples
 tuple_list = []
