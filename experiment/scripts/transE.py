@@ -10,7 +10,7 @@ import ast
 
 # Define a small set of triples for the dummy knowledge graph
 triples = []
-file_name = "../data/triples.txt"
+file_name = "../data/tuple_triple.txt"
 
 with open(file_name, 'r') as file:
 
@@ -75,7 +75,7 @@ result = pipeline(
 )
 
 # Save the TransE embedding model
-torch.save(result.model, '../model/transe_model.pth')
+torch.save(result.model, '../models/transe_model.pth')
 
 # Print a message indicating that the TransE model has been saved
 print("TransE model saved successfully.")

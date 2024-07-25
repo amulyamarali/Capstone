@@ -14,7 +14,7 @@ from functional import LinearWeightNorm
 # *************** DATA SET RELATED CODE *************** #
 # Define a small set of triples for the dummy knowledge graph
 triples = []
-file_name = "../data/triples.txt"
+file_name = "../data/final_triple.txt"
 
 with open(file_name, 'r') as file:
     # Read the contents of the file
@@ -85,7 +85,7 @@ if training is None:
 #     indices=None).cpu().detach().numpy()
 
 # For saved RESCAL model 
-result = torch.load("../models/complex_model.pth")
+result = torch.load("../models/rotate_model.pth")
 
 entity_embeddings = result.entity_representations[0](
     indices=None).cpu().detach().numpy()
@@ -231,7 +231,7 @@ optimizer_d = optim.Adam(discriminator.parameters(), lr=lr)
 criterion = nn.BCELoss()
 
 # Convert neighborhood embeddings to tensor
-real_data = torch.tensor(neighbor_embeddings, dtype=torch.float)
+real_data = torch.tensor(entity_embeddings, dtype=torch.float)
 
 # *************** TRAINING THE GAN *************** #
 for epoch in range(num_epochs):
@@ -239,15 +239,27 @@ for epoch in range(num_epochs):
     optimizer_d.zero_grad()
 
     # Real data
-    real_labels = torch.ones(batch_size, 1)
+    real_data = torch.tensor(entity_embeddings, dtype=torch.float)
+    real_labels = torch.ones(real_data.size(0), 1)  # Match size with real_data
     outputs = discriminator(real_data)
+    
+    # Ensure the output and label sizes match
+    if outputs.size() != real_labels.size():
+        raise ValueError(f"Size mismatch: outputs size {outputs.size()} does not match real_labels size {real_labels.size()}")
+
     d_loss_real = criterion(outputs, real_labels)
 
     # Fake data
-    noise = torch.randn(batch_size, input_dim)
+    noise = torch.randn(real_data.size(0), input_dim)  # Use the same batch size
     fake_data = generator(noise)
-    fake_labels = torch.zeros(batch_size, 1)
+    fake_labels = torch.zeros(fake_data.size(0), 1)  # Match size with fake_data
+    
     outputs = discriminator(fake_data.detach())
+    
+    # Ensure the output and label sizes match
+    if outputs.size() != fake_labels.size():
+        raise ValueError(f"Size mismatch: outputs size {outputs.size()} does not match fake_labels size {fake_labels.size()}")
+
     d_loss_fake = criterion(outputs, fake_labels)
 
     d_loss = d_loss_real + d_loss_fake
@@ -257,9 +269,15 @@ for epoch in range(num_epochs):
     # Train generator
     optimizer_g.zero_grad()
 
-    noise = torch.randn(batch_size, input_dim)
+    noise = torch.randn(real_data.size(0), input_dim)  # Use the same batch size
     fake_data = generator(noise)
+    
     outputs = discriminator(fake_data)
+    
+    # Ensure the output and label sizes match
+    if outputs.size() != real_labels.size():
+        raise ValueError(f"Size mismatch: outputs size {outputs.size()} does not match real_labels size {real_labels.size()}")
+
     g_loss = criterion(outputs, real_labels)
 
     g_loss.backward()
@@ -275,7 +293,7 @@ real_data = torch.tensor(neighbor_embeddings, dtype=torch.float)
 # Generate a new node embedding
 with torch.no_grad():
     noise = torch.randn(1, input_dim)
-    new_node_embedding = generator(noise).numpy().flatten()
+    new_node_embedding = generator(real_data).numpy().flatten()
 
 print("\nGenerated embedding for the new node:")
 print(new_node_embedding)

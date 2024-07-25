@@ -14,29 +14,21 @@ from functional import LinearWeightNorm
 # *************** DATA SET RELATED CODE *************** #
 # Define a small set of triples for the dummy knowledge graph
 triples = []
-file_name = "../data/train_triples.txt"
+file_name = "../data/final_triple.txt"
 
 with open(file_name, 'r') as file:
-    for line in file:
-        # Strip whitespace from the line
-        stripped_line = line.strip()
+    # Read the contents of the file
+    file_content = file.read()
 
-        # Ensure the line isn't empty
-        if stripped_line:
-            # Convert the string representation of the list back to an actual list
-            try:
-                new_data = ast.literal_eval(stripped_line)
+    # Convert the string representation of the list back to an actual list
+    new_data = ast.literal_eval(file_content)
 
-                # Check if the parsed data is a list
-                if isinstance(new_data, list):
-                    # Append the new data to the existing list of triples
-                    triples.append(new_data)
-                else:
-                    print("The data in the file is not a list.")
-            except (ValueError, SyntaxError) as e:
-                print(f"Error parsing line: {stripped_line}. Error: {e}")
+    # Append the new data to the existing list
+    if isinstance(new_data, list):
+        triples.extend(new_data)
+    else:
+        print("The data in the file is not a list.")
 
-                
 # Generate a KG representation using NetworkX
 # Create a directed graph
 G = nx.DiGraph()
@@ -93,7 +85,7 @@ if training is None:
 #     indices=None).cpu().detach().numpy()
 
 # For saved RESCAL model 
-result = torch.load("../models/transe_model.pth")
+result = torch.load("../models/distmult_model.pth")
 
 entity_embeddings = result.entity_representations[0](
     indices=None).cpu().detach().numpy()
@@ -178,7 +170,7 @@ plt.show()
 sparse_node = None
 for node in densities:
     if densities[node] < 0.1:
-        sparse_node = 258
+        sparse_node = 257
         break
 
 if sparse_node is not None:
@@ -239,7 +231,7 @@ optimizer_d = optim.Adam(discriminator.parameters(), lr=lr)
 criterion = nn.BCELoss()
 
 # Convert neighborhood embeddings to tensor
-real_data = torch.tensor(neighbor_embeddings, dtype=torch.float)
+real_data = torch.tensor(entity_embeddings, dtype=torch.float)
 
 # *************** TRAINING THE GAN *************** #
 for epoch in range(num_epochs):
@@ -247,15 +239,27 @@ for epoch in range(num_epochs):
     optimizer_d.zero_grad()
 
     # Real data
-    real_labels = torch.ones(batch_size, 1)
+    real_data = torch.tensor(entity_embeddings, dtype=torch.float)
+    real_labels = torch.ones(real_data.size(0), 1)  # Match size with real_data
     outputs = discriminator(real_data)
+    
+    # Ensure the output and label sizes match
+    if outputs.size() != real_labels.size():
+        raise ValueError(f"Size mismatch: outputs size {outputs.size()} does not match real_labels size {real_labels.size()}")
+
     d_loss_real = criterion(outputs, real_labels)
 
     # Fake data
-    noise = torch.randn(batch_size, input_dim)
+    noise = torch.randn(real_data.size(0), input_dim)  # Use the same batch size
     fake_data = generator(noise)
-    fake_labels = torch.zeros(batch_size, 1)
+    fake_labels = torch.zeros(fake_data.size(0), 1)  # Match size with fake_data
+    
     outputs = discriminator(fake_data.detach())
+    
+    # Ensure the output and label sizes match
+    if outputs.size() != fake_labels.size():
+        raise ValueError(f"Size mismatch: outputs size {outputs.size()} does not match fake_labels size {fake_labels.size()}")
+
     d_loss_fake = criterion(outputs, fake_labels)
 
     d_loss = d_loss_real + d_loss_fake
@@ -265,9 +269,15 @@ for epoch in range(num_epochs):
     # Train generator
     optimizer_g.zero_grad()
 
-    noise = torch.randn(batch_size, input_dim)
+    noise = torch.randn(real_data.size(0), input_dim)  # Use the same batch size
     fake_data = generator(noise)
+    
     outputs = discriminator(fake_data)
+    
+    # Ensure the output and label sizes match
+    if outputs.size() != real_labels.size():
+        raise ValueError(f"Size mismatch: outputs size {outputs.size()} does not match real_labels size {real_labels.size()}")
+
     g_loss = criterion(outputs, real_labels)
 
     g_loss.backward()
@@ -278,7 +288,7 @@ for epoch in range(num_epochs):
 
 
 # Convert neighborhood embeddings to tensor
-real_data = torch.tensor(neighbor_embeddings, dtype=torch.float)
+neighbor_data = torch.tensor(neighbor_embeddings, dtype=torch.float)
 
 # Generate a new node embedding
 with torch.no_grad():
@@ -287,6 +297,7 @@ with torch.no_grad():
 
 print("\nGenerated embedding for the new node:")
 print(new_node_embedding)
+
 
 
 # *************** FIND NEAREST EXISTING NODE (cosine similarity) *************** #
