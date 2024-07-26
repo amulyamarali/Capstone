@@ -1,20 +1,24 @@
-file_path = '../data/updated_triples.txt'
+file_path = '../data/fbk_triple.txt'
 
 # Initialize an empty list to store the tuples
 tuple_list = []
 
-# Read the content of abcd.txt
+# Read the content of fbk_triple.txt
 with open(file_path, 'r') as file:
     for line in file:
-        # Convert the string representation of the list to an actual list
-        line_list = eval(line.strip())
+        # Strip whitespace characters and remove enclosing brackets
+        line = line.strip()[1:-1]
+        # Split the line by comma, considering the possibility of commas inside quotes
+        parts = line.split(', ')
+        # Remove any enclosing quotes
+        parts = [part.strip("'") for part in parts]
         # Convert the list to a tuple and append to the list
-        tuple_list.append(tuple(line_list))
+        tuple_list.append(tuple(parts))
 
 # Print the list of tuples
 print(tuple_list)
 
-# save the list of tuples to a file
-output_file = '../data/final_triple.txt'
+# Save the list of tuples to a file
+output_file = '../data/final_fbk_triple.txt'
 with open(output_file, 'w') as file:
     file.write(str(tuple_list))

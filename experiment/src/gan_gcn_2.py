@@ -14,7 +14,7 @@ from functional import LinearWeightNorm
 # *************** DATA SET RELATED CODE *************** #
 # Define a small set of triples for the dummy knowledge graph
 triples = []
-file_name = "../data/final_triple.txt"
+file_name = "../data/final_fbk_triple.txt"
 
 with open(file_name, 'r') as file:
     # Read the contents of the file
@@ -69,7 +69,7 @@ if training is None:
 # ******************** Define the RESCAL model and train it using the pipeline *************************
 
 # For saved RESCAL model 
-result = torch.load("../models/rotate_model.pth")
+result = torch.load("../models/rotate_fbk_model.pth")
 
 entity_embeddings = result.entity_representations[0](
     indices=None).cpu().detach().numpy()
