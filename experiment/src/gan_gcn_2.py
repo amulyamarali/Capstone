@@ -1,3 +1,4 @@
+from sklearn.metrics.pairwise import cosine_similarity
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -52,6 +53,8 @@ triples_array = np.array(triples)
 triples_factory = TriplesFactory.from_labeled_triples(triples_array)
 
 # Function to safely split triples and handle errors
+
+
 def safe_split(triples_factory, ratios):
     try:
         training, testing = triples_factory.split(ratios)
@@ -59,6 +62,7 @@ def safe_split(triples_factory, ratios):
     except ValueError as e:
         print("Error during split:", e)
         return None, None
+
 
 # Attempt to split the triples into training and testing sets
 training, testing = safe_split(triples_factory, [0.8, 0.2])
@@ -68,7 +72,7 @@ if training is None:
 
 # ******************** Define the RESCAL model and train it using the pipeline *************************
 
-# For saved RESCAL model 
+# For saved RESCAL model
 result = torch.load("../models/rotate_fbk_model.pth")
 
 entity_embeddings = result.entity_representations[0](
@@ -86,7 +90,7 @@ entity_to_id = {entity: idx for idx, entity in enumerate(entities)}
 
 # Generate the nodes list
 nodes = [(entity_to_id[entity], {
-        'feature': entity_embeddings[entity_to_id[entity]].tolist()}) for entity in entities]
+    'feature': entity_embeddings[entity_to_id[entity]].tolist()}) for entity in entities]
 
 # Generate the edges list
 edges = [(entity_to_id[head], entity_to_id[tail]) for head, _, tail in triples]
@@ -107,6 +111,8 @@ node_features = np.array([data['feature'] for _, data in G.nodes(data=True)])
 # plt.show()
 
 # *************** SPARSITY DETECTION CODE *************** #
+
+
 def calculate_density(G):
     densities = {}
     for node in G.nodes:
@@ -117,6 +123,7 @@ def calculate_density(G):
             density = 0
         densities[node] = density
     return densities
+
 
 densities = calculate_density(G)
 
@@ -131,17 +138,22 @@ least_dense_of_top_seven = min(top_seven_dense_nodes, key=densities.get)
 least_dense_of_top_seven_density = densities[least_dense_of_top_seven]
 
 print("\nTop seven densely populated nodes:", top_seven_dense_nodes)
-print("\nNode densities of top seven:", {node: densities[node] for node in top_seven_dense_nodes})
-print("\nLeast dense node among top seven densely populated nodes:", least_dense_of_top_seven, "with density:", least_dense_of_top_seven_density)
+print("\nNode densities of top seven:", {
+      node: densities[node] for node in top_seven_dense_nodes})
+print("\nLeast dense node among top seven densely populated nodes:",
+      least_dense_of_top_seven, "with density:", least_dense_of_top_seven_density)
 
 # Highlight the top seven densely populated nodes in yellow
-node_colors = ['yellow' if node in top_seven_dense_nodes else 'lightblue' for node in G.nodes]
-node_sizes = [1000 if node in top_seven_dense_nodes else 100 for node in G.nodes]
+node_colors = [
+    'yellow' if node in top_seven_dense_nodes else 'lightblue' for node in G.nodes]
+node_sizes = [
+    1000 if node in top_seven_dense_nodes else 100 for node in G.nodes]
 
 # Reposition nodes to ensure top seven densely populated nodes are not overlapped
 pos = nx.spring_layout(G)
 for i, node in enumerate(top_seven_dense_nodes):
-    pos[node] = (pos[node][0], pos[node][1] + 0.1 * i)  # Adjust position to avoid overlap
+    # Adjust position to avoid overlap
+    pos[node] = (pos[node][0], pos[node][1] + 0.1 * i)
 
 nx.draw(G, pos, with_labels=True, node_size=node_sizes, font_size=5,
         node_color=node_colors, font_weight='bold', font_color='darkred')
@@ -158,11 +170,13 @@ for node in densities:
         break
 
 if sparse_node is not None:
-    print(f"\nFirst node with density less than 0.1: {sparse_node} with density {densities[sparse_node]}")
+    print(
+        f"\nFirst node with density less than 0.1: {sparse_node} with density {densities[sparse_node]}")
     neighbors = list(G.neighbors(sparse_node))
     print(f"Neighbors of node {sparse_node}:", neighbors)
-    neighbor_embeddings = [entity_embeddings[neighbor] for neighbor in neighbors]
-    
+    neighbor_embeddings = [entity_embeddings[neighbor]
+                           for neighbor in neighbors]
+
     print(f"\nNeighborhood embeddings of node {sparse_node}:")
     for i, embedding in enumerate(neighbor_embeddings):
         print(f"Neighbor {neighbors[i]}: {embedding}")
@@ -183,6 +197,7 @@ class Generator(nn.Module):
     def forward(self, x):
         return self.fc(x)
 
+
 class Discriminator(nn.Module):
     def __init__(self, input_dim):
         super(Discriminator, self).__init__()
@@ -195,6 +210,7 @@ class Discriminator(nn.Module):
 
     def forward(self, x):
         return self.fc(x)
+
 
 # *************** HYPERPARAMETERS *************** #
 input_dim = len(neighbor_embeddings[0])
@@ -226,23 +242,27 @@ for epoch in range(num_epochs):
     real_data = torch.tensor(entity_embeddings, dtype=torch.float)
     real_labels = torch.ones(real_data.size(0), 1)  # Match size with real_data
     outputs = discriminator(real_data)
-    
+
     # Ensure the output and label sizes match
     if outputs.size() != real_labels.size():
-        raise ValueError(f"Size mismatch: outputs size {outputs.size()} does not match real_labels size {real_labels.size()}")
+        raise ValueError(
+            f"Size mismatch: outputs size {outputs.size()} does not match real_labels size {real_labels.size()}")
 
     d_loss_real = criterion(outputs, real_labels)
 
     # Fake data
-    noise = torch.randn(real_data.size(0), input_dim)  # Use the same batch size
+    # Use the same batch size
+    noise = torch.randn(real_data.size(0), input_dim)
     fake_data = generator(noise)
-    fake_labels = torch.zeros(fake_data.size(0), 1)  # Match size with fake_data
-    
+    # Match size with fake_data
+    fake_labels = torch.zeros(fake_data.size(0), 1)
+
     outputs = discriminator(fake_data.detach())
-    
+
     # Ensure the output and label sizes match
     if outputs.size() != fake_labels.size():
-        raise ValueError(f"Size mismatch: outputs size {outputs.size()} does not match fake_labels size {fake_labels.size()}")
+        raise ValueError(
+            f"Size mismatch: outputs size {outputs.size()} does not match fake_labels size {fake_labels.size()}")
 
     d_loss_fake = criterion(outputs, fake_labels)
 
@@ -253,14 +273,16 @@ for epoch in range(num_epochs):
     # Train generator
     optimizer_g.zero_grad()
 
-    noise = torch.randn(real_data.size(0), input_dim)  # Use the same batch size
+    # Use the same batch size
+    noise = torch.randn(real_data.size(0), input_dim)
     fake_data = generator(noise)
-    
+
     outputs = discriminator(fake_data)
-    
+
     # Ensure the output and label sizes match
     if outputs.size() != real_labels.size():
-        raise ValueError(f"Size mismatch: outputs size {outputs.size()} does not match real_labels size {real_labels.size()}")
+        raise ValueError(
+            f"Size mismatch: outputs size {outputs.size()} does not match real_labels size {real_labels.size()}")
 
     g_loss = criterion(outputs, real_labels)
 
@@ -268,7 +290,8 @@ for epoch in range(num_epochs):
     optimizer_g.step()
 
     if epoch % 10 == 0:
-        print(f"Epoch [{epoch}/{num_epochs}] | D Loss: {d_loss.item()} | G Loss: {g_loss.item()}")
+        print(
+            f"Epoch [{epoch}/{num_epochs}] | D Loss: {d_loss.item()} | G Loss: {g_loss.item()}")
 
 
 # Convert neighborhood embeddings to tensor
@@ -289,11 +312,12 @@ real_neighbor_embeddings = np.abs(np.array(neighbor_embeddings))
 real_new_node_embedding = np.abs(np.array(new_node_embedding))
 
 # Compute cosine similarity between new node embedding and existing node embeddings
-existing_embeddings = np.array([data['feature'] for _, data in G.nodes(data=True)])
+existing_embeddings = np.array([data['feature']
+                               for _, data in G.nodes(data=True)])
 real_existing_embeddings = np.abs(existing_embeddings)
 
-from sklearn.metrics.pairwise import cosine_similarity
-cos_similarities = cosine_similarity([real_new_node_embedding], real_existing_embeddings).flatten()
+cos_similarities = cosine_similarity(
+    [real_new_node_embedding], real_existing_embeddings).flatten()
 
 # Find the index of the nearest existing node
 nearest_idx = np.argmax(cos_similarities)
@@ -304,9 +328,11 @@ print(f"\nSparse node: {sparse_node}")
 
 # Decode the real-world name of the nearest existing node
 # Assuming node names are directly mapped to their IDs
-print(f"\nNearest existing node to the generated node is {nearest_node} with cosine similarity: {cos_similarities[nearest_idx]}")
+print(
+    f"\nNearest existing node to the generated node is {nearest_node} with cosine similarity: {cos_similarities[nearest_idx]}")
 
-real_name_of_nearest_node = entities[nearest_node]  # Adjust this line if you have a mapping
+# Adjust this line if you have a mapping
+real_name_of_nearest_node = entities[nearest_node]
 print(f"Real-world name of the nearest node: {real_name_of_nearest_node}")
 
 
@@ -332,8 +358,10 @@ def calculate_relation_scores(head_embedding, tail_embedding, relation_embedding
         scores.append(score)
     return scores
 
+
 # Calculate relation scores between the sparse node and the new node
-relation_scores = calculate_relation_scores(sparse_node_embedding, new_node_embedding, relation_embeddings)
+relation_scores = calculate_relation_scores(
+    sparse_node_embedding, new_node_embedding, relation_embeddings)
 
 # Find the relation with the highest score
 best_relation_idx = np.argmax(relation_scores)
@@ -341,4 +369,5 @@ best_relation = relations[best_relation_idx]
 
 print("\nRelation scores:", relation_scores)
 
-print(f"\nPredicted relation between the new node and the sparse node: {best_relation}")
+print(
+    f"\nPredicted relation between the new node and the sparse node: {best_relation}")
