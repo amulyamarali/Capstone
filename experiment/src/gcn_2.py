@@ -339,117 +339,29 @@ print(
 real_name_of_nearest_node = entities[nearest_node]
 print(f"Real-world name of the nearest node: {real_name_of_nearest_node}")
 
-# *************** COSINE SIMILARITY AND SELECT NEW NODE EMBEDDING *************** #
-
-# sparse_node_embedding = entity_embeddings[entity_to_id[sparse_node]]
-
-# print("\nNew node embedding:", new_node_embedding)
-
-# # Convert NetworkX graph to PyTorch Geometric data
-# # data = from_networkx(G)
-# # data.x = torch.tensor(node_features, dtype=torch.float)
-
-# # Generate edges and labels
-# head_indices = [entity_to_id[head] for head, _, _ in triples]
-# tail_indices = [entity_to_id[tail] for _, _, tail in triples]
-# relation_indices = [triples_factory.relation_to_id[relation]
-#                     for _, relation, _ in triples]
-
-# edge_index = torch.tensor([head_indices, tail_indices], dtype=torch.long)
-# edge_labels = torch.tensor(relation_indices, dtype=torch.long)
-
-# # Create PyTorch Geometric data object
-# data = Data(x=node_features, edge_index=edge_index)
-
-# # Convert edge labels to tensor
-# edge_labels = []
-# for edge in G.edges(data=True):
-#     head, tail, data = edge
-#     label = data.get('label', None)
-#     if label is None or label.strip() == '':
-#         print(f"Missing or empty label for edge ({head}, {tail})")
-#         continue
-#     if label not in triples_factory.relation_to_id:
-#         print(f"Label '{label}' not found in relation_to_id mapping")
-#         continue
-#     edge_labels.append(
-#         relation_embeddings[triples_factory.relation_to_id[label]])
-
-# # Convert edge labels to tensor
-# if edge_labels:
-#     edge_labels = torch.tensor(edge_labels, dtype=torch.float)
-#     data.edge_attr = edge_labels
-# else:
-#     print("No valid edge labels found. Exiting.")
-#     exit(1)
-
-# # Define GCN-based relation predictor
 
 
-# class GCNRelationPredictor(nn.Module):
-#     def __init__(self, input_dim, hidden_dim, output_dim):
-#         super(GCNRelationPredictor, self).__init__()
-#         self.conv1 = GCNConv(input_dim, hidden_dim)
-#         self.conv2 = GCNConv(hidden_dim, output_dim)
-
-#     def forward(self, x, edge_index):
-#         x = self.conv1(x, edge_index)
-#         x = F.relu(x)
-#         x = self.conv2(x, edge_index)
-#         return x
-
-
-# # Initialize the GCN model
-# hidden_dim = 128
-# output_dim = len(triples_factory.relation_to_id)  # Number of relations
-# model = GCNRelationPredictor(
-#     input_dim=data.x.shape[1], hidden_dim=hidden_dim, output_dim=output_dim)
-# optimizer = optim.Adam(model.parameters(), lr=0.01)
-# criterion = nn.CrossEntropyLoss()
-
-# # Training loop for GCN
-# num_epochs = 200
-# for epoch in range(num_epochs):
-#     model.train()
-#     optimizer.zero_grad()
-#     out = model(data.x, data.edge_index)
-#     loss = criterion(out, data.edge_attr)
-#     loss.backward()
-#     optimizer.step()
-#     if (epoch + 1) % 20 == 0:
-#         print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.4f}')
-
-# # Predict relations
-# model.eval()
-# with torch.no_grad():
-#     out = model(data.x, data.edge_index)
-
-#     # Find the best relation for the new node
-#     new_node_embedding_tensor = torch.tensor(
-#         new_node_embedding, dtype=torch.float).unsqueeze(0)
-#     similarities = F.cosine_similarity(
-#         new_node_embedding_tensor, torch.tensor(out.numpy()))
-#     best_relation_idx = torch.argmax(similarities).item()
-#     relations = list(triples_factory.relation_to_id.keys())
-#     best_relation = relations[best_relation_idx]
-
-#     print(
-#         f"\nPredicted relation between the new node and the sparse node: {best_relation}")
-
+# **************************** GCN for Relation Prediction ****************************** #
 
 # Define a simple GCN model for relation prediction
-
 class GCNRelationPredictor(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim):
         super(GCNRelationPredictor, self).__init__()
         self.conv1 = GCNConv(input_dim, hidden_dim)
         self.conv2 = GCNConv(hidden_dim, output_dim)
+        self.fc = nn.Linear(output_dim, output_dim)  # Learnable layer for scoring
 
     def forward(self, x, edge_index):
         x = self.conv1(x, edge_index)
         x = F.relu(x)
         x = self.conv2(x, edge_index)
         return x
+
+    def score(self, node_rep1, node_rep2):
+        # Use a learnable layer for scoring
+        combined_rep = node_rep1 * node_rep2  # Element-wise multiplication
+        scores = self.fc(combined_rep)  # Linear transformation
+        return F.softmax(scores, dim=0)  # Apply softmax to normalize score
 
 # Create a directed graph
 G = nx.DiGraph()
@@ -489,7 +401,6 @@ criterion = nn.CrossEntropyLoss()
 # Print the number of edges
 print(f"Number of edges in the graph: {data.edge_index.shape[1]}")
 print(f"Number of edge labels: {edge_labels.size(0)}")
-
 
 # Training loop
 num_epochs = 200
@@ -532,101 +443,33 @@ node_features = torch.cat([node_features, new_node_embedding_tensor], dim=0)
 # Update edge_index to include new edges
 # Add edges from the new node to the sparse node and vice versa
 new_edges = torch.tensor([[new_node_id, sparse_node_id], [
-                        sparse_node_id, new_node_id]], dtype=torch.long)
+    sparse_node_id, new_node_id]], dtype=torch.long)
 edge_index = torch.cat([data.edge_index, new_edges], dim=1)
 
 # Update data object
 data = Data(x=node_features, edge_index=edge_index)
 
-# Training loop
-num_epochs = 200
-for epoch in range(num_epochs):
-    model.train()
-    optimizer.zero_grad()
-
-    # Forward pass
-    out = model(data.x, data.edge_index)
-
-    # Calculate loss
-    # Ensure edge_labels is on the same device as out
-    edge_labels = edge_labels.to(out.device)
-
-    # Use only the relevant part of the output
-    # Extracting predictions for the edges present in the graph
-    predicted_logits = out[data.edge_index[0]]
-
-    # Ensure the output and edge_labels sizes match
-    if predicted_logits.size(0) != edge_labels.size(0):
-        raise ValueError(
-            f"Size mismatch: predicted_logits size {predicted_logits.size()} does not match edge_labels size {edge_labels.size()}"
-        )
-
-    loss = criterion(predicted_logits, edge_labels)
-    loss.backward()
-    optimizer.step()
-
-    if (epoch + 1) % 20 == 0:
-        print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.4f}')
-
-
-# Prepare the new and sparse node embeddings
-new_node_embedding_tensor = torch.tensor(
-    new_node_embedding, dtype=torch.float).unsqueeze(0)
 sparse_node_embedding_tensor = torch.tensor(
-    entity_embeddings[sparse_node_idx], dtype=torch.float).unsqueeze(0)
+    entity_embeddings[sparse_node_id], dtype=torch.float).unsqueeze(0)
 
-# Ensure the model is run on the same device
-new_node_embedding_tensor = new_node_embedding_tensor.to(
-    next(model.parameters()).device)
-sparse_node_embedding_tensor = sparse_node_embedding_tensor.to(
-    next(model.parameters()).device)
-
-# Get predictions for the new and sparse nodes
+# Get predictions for the edge between the new node and the sparse node
 model.eval()
 with torch.no_grad():
-    new_node_pred = model(new_node_embedding_tensor, data.edge_index)
-    sparse_node_pred = model(sparse_node_embedding_tensor, data.edge_index)
+    out = model(data.x, data.edge_index)
+    # Get representations for new node and sparse node
+    new_node_rep = out[new_node_id]
+    sparse_node_rep = out[sparse_node_id]
+
+    # Predict the relation for the edge new_node -> sparse_node
+    # Using the learnable scoring function
+    relation_scores = model.score(new_node_rep, sparse_node_rep)
 
     # Find the predicted relation
-    new_node_pred_relation = new_node_pred.argmax(dim=1).item()
-    sparse_node_pred_relation = sparse_node_pred.argmax(dim=1).item()
+    predicted_relation = relation_scores.argmax().item()
+
+    # Get the score for the predicted relation
+    predicted_relation_score = relation_scores[predicted_relation].item()
 
     print(
-        f"Predicted relation for the new node: {list(triples_factory.relation_to_id.keys())[new_node_pred_relation]}")
-    print(
-        f"Predicted relation for the sparse node: {list(triples_factory.relation_to_id.keys())[sparse_node_pred_relation]}")
-
-
-# # Predict the relation type using GCN
-# model.eval()
-# with torch.no_grad():
-#     out = model(data.x, data.edge_index)
-
-#     # Example prediction: Predict the relation for the edges in the dataset
-#     pred = out[data.edge_index[0]]
-#     # Get the indices of the max logits
-#     predicted_relations = pred.argmax(dim=1)
-
-#     # Display predictions for new node and sparse node
-#     new_node_idx = len(node_features)  # Index for the new node
-#     sparse_node_idx = entity_to_id[sparse_node]
-
-#     # Get embeddings for new and sparse nodes
-#     new_node_embedding_tensor = torch.tensor(
-#         new_node_embedding, dtype=torch.float).unsqueeze(0)
-#     sparse_node_embedding_tensor = torch.tensor(
-#         entity_embeddings[sparse_node_idx], dtype=torch.float).unsqueeze(0)
-
-#     # Use the model to get predictions
-#     new_node_pred = model(new_node_embedding_tensor, data.edge_index)
-#     sparse_node_pred = model(sparse_node_embedding_tensor, data.edge_index)
-
-#     # Find the predicted relation between new_node and sparse_node
-#     new_node_pred_relation = new_node_pred.argmax(dim=1).item()
-#     sparse_node_pred_relation = sparse_node_pred.argmax(dim=1).item()
-
-#     # Display predictions
-#     print(
-#         f"Predicted relation for the new node: {list(triples_factory.relation_to_id.keys())[new_node_pred_relation]}")
-#     print(
-#         f"Predicted relation for the sparse node: {list(triples_factory.relation_to_id.keys())[sparse_node_pred_relation]}")
+        f"Predicted relation type to connect new node '{real_name_of_nearest_node}' and sparse node '{sparse_node}': {list(triples_factory.relation_to_id.keys())[predicted_relation]}")
+    print(f"Score for predicted relation: {predicted_relation_score:.4f}")
