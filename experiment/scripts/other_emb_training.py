@@ -142,9 +142,9 @@ result = pipeline(
     model='RotatE',
     training=training,
     testing=testing,
-    training_kwargs=dict(num_epochs=100, batch_size=64),  # Adjust hyperparameters as needed
+    training_kwargs=dict(num_epochs=200, batch_size=2),  # Adjust hyperparameters as needed
     optimizer_kwargs=dict(lr=0.01),  # Learning rate
 )
 
 # Save the RotatE model
-torch.save(result.model, '../models/rotate_fbk_model.pth')
+torch.save(result.model, '../models/rotate2.pth')
