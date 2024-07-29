@@ -64,87 +64,87 @@ if training is None:
     print("Failed to split triples. Exiting.")
     exit(1)
 
-# # Define the RESCAL model and train it using the pipeline
-# result_rescal = pipeline(
-#     model='RESCAL',
-#     training=training,
-#     testing=testing,
-#     training_kwargs=dict(num_epochs=100, batch_size=2),
-#     optimizer_kwargs=dict(lr=0.01),
-# )
-
-# # Save the RESCAL embedding model
-# torch.save(result_rescal.model, '../models/rescal_fbk_model.pth')
-
-# # Define the TransE model and train it using the pipeline
-# result_transe = pipeline(
-#     model='TransE',
-#     training=training,
-#     testing=testing,
-#     training_kwargs=dict(num_epochs=100, batch_size=2),
-#     optimizer_kwargs=dict(lr=0.01),
-# )
-
-# # Save the TransE embedding model
-# torch.save(result_transe.model, '../models/transe_fbk_model.pth')
-
-# # Define the DistMult model and train it using the pipeline
-# result_distmult = pipeline(
-#     model='DistMult',
-#     training=training,
-#     testing=testing,
-#     training_kwargs=dict(num_epochs=100, batch_size=2),
-#     optimizer_kwargs=dict(lr=0.01),
-# )
-
-# # Save the DistMult embedding model
-# torch.save(result_distmult.model, '../models/distmult_fbk_model.pth')
-
-# # Define the HolE model and train it using the pipeline
-# result_hole = pipeline(
-#     model='HolE',
-#     training=training,
-#     testing=testing,
-#     training_kwargs=dict(num_epochs=100, batch_size=2),
-#     optimizer_kwargs=dict(lr=0.01),
-# )
-
-# # Save the HolE embedding model
-# torch.save(result_hole.model, '../models/hole_fbk_model.pth')
-
-# # Define the ComplEx model and train it using the pipeline
-# result_complex = pipeline(
-#     model='ComplEx',
-#     training=training,
-#     testing=testing,
-#     training_kwargs=dict(num_epochs=100, batch_size=2),
-#     optimizer_kwargs=dict(lr=0.01),
-# )
-
-# # Save the ComplEx embedding model
-# torch.save(result_complex.model, '../models/complex_fbk_model.pth')
-
-# # Define the ConvE model and train it using the pipeline
-# result_conve = pipeline(
-#     model='ConvE',
-#     training=training,
-#     testing=testing,
-#     training_kwargs=dict(num_epochs=100, batch_size=2),
-#     optimizer_kwargs=dict(lr=0.01),
-# )
-
-# # Save the ConvE embedding model
-# torch.save(result_conve.model, '../models/conve_fbk_model.pth')
-
-
-# Train the RotatE model
-result = pipeline(
-    model='RotatE',
+# Define the RESCAL model and train it using the pipeline
+result_rescal = pipeline(
+    model='RESCAL',
     training=training,
     testing=testing,
-    training_kwargs=dict(num_epochs=200, batch_size=2),  # Adjust hyperparameters as needed
-    optimizer_kwargs=dict(lr=0.01),  # Learning rate
+    training_kwargs=dict(num_epochs=200, batch_size=2),
+    optimizer_kwargs=dict(lr=0.01),
 )
 
-# Save the RotatE model
-torch.save(result.model, '../models/rotate2.pth')
+# Save the RESCAL embedding model
+torch.save(result_rescal.model, '../new_models/rescal_fbk_model.pth')
+
+# Define the TransE model and train it using the pipeline
+result_transe = pipeline(
+    model='TransE',
+    training=training,
+    testing=testing,
+    training_kwargs=dict(num_epochs=200, batch_size=2),
+    optimizer_kwargs=dict(lr=0.01),
+)
+
+# Save the TransE embedding model
+torch.save(result_transe.model, '../new_models/transe_fbk_model.pth')
+
+# Define the DistMult model and train it using the pipeline
+result_distmult = pipeline(
+    model='DistMult',
+    training=training,
+    testing=testing,
+    training_kwargs=dict(num_epochs=200, batch_size=2),
+    optimizer_kwargs=dict(lr=0.01),
+)
+
+# Save the DistMult embedding model
+torch.save(result_distmult.model, '../new_models/distmult_fbk_model.pth')
+
+# Define the HolE model and train it using the pipeline
+result_hole = pipeline(
+    model='HolE',
+    training=training,
+    testing=testing,
+    training_kwargs=dict(num_epochs=200, batch_size=2),
+    optimizer_kwargs=dict(lr=0.01),
+)
+
+# Save the HolE embedding model
+torch.save(result_hole.model, '../new_models/hole_fbk_model.pth')
+
+# Define the ComplEx model and train it using the pipeline
+result_complex = pipeline(
+    model='ComplEx',
+    training=training,
+    testing=testing,
+    training_kwargs=dict(num_epochs=200, batch_size=2),
+    optimizer_kwargs=dict(lr=0.01),
+)
+
+# Save the ComplEx embedding model
+torch.save(result_complex.model, '../new_models/complex_fbk_model.pth')
+
+# Define the ConvE model and train it using the pipeline
+result_conve = pipeline(
+    model='ConvE',
+    training=training,
+    testing=testing,
+    training_kwargs=dict(num_epochs=200, batch_size=2),
+    optimizer_kwargs=dict(lr=0.01),
+)
+
+# Save the ConvE embedding model
+torch.save(result_conve.model, '../new_models/conve_fbk_model.pth')
+
+
+# # Train the RotatE model
+# result = pipeline(
+#     model='RotatE',
+#     training=training,
+#     testing=testing,
+#     training_kwargs=dict(num_epochs=200, batch_size=2),  # Adjust hyperparameters as needed
+#     optimizer_kwargs=dict(lr=0.01),  # Learning rate
+# )
+
+# # Save the RotatE model
+# torch.save(result.model, '../new_models/rotate2.pth')
