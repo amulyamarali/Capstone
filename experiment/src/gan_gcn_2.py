@@ -40,11 +40,11 @@ for head, relation, tail in triples:
 
 # Draw the graph
 pos = nx.spring_layout(G)
-# nx.draw(G, pos, with_labels=True, node_size=2000, font_size=10,
-#         node_color='lightblue', font_weight='bold', font_color='darkred')
-# edge_labels = nx.get_edge_attributes(G, 'label')
-# nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
-# plt.show()
+nx.draw(G, pos, with_labels=True, node_size=2000, font_size=10,
+        node_color='lightblue', font_weight='bold', font_color='darkred')
+edge_labels = nx.get_edge_attributes(G, 'label')
+nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+plt.show()
 
 # Convert the list of triples to a NumPy array
 triples_array = np.array(triples)
@@ -73,7 +73,7 @@ if training is None:
 # ******************** Define the RESCAL model and train it using the pipeline *************************
 
 # For saved RESCAL model
-result = torch.load("../models/rotate_fbk_model.pth")
+result = torch.load("../models/rotate_model.pth")
 
 entity_embeddings = result.entity_representations[0](
     indices=None).cpu().detach().numpy()

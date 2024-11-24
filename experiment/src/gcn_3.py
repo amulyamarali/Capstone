@@ -19,7 +19,7 @@ from functional import LinearWeightNorm
 # *************** DATA SET RELATED CODE *************** #
 # Define a small set of triples for the dummy knowledge graph
 triples = []
-file_name = "../data/final_triple.txt"
+file_name = "../data/final_fbk_triple.txt"
 
 with open(file_name, 'r') as file:
     # Read the contents of the file
@@ -78,7 +78,7 @@ if training is None:
 # ******************** Define the RESCAL model and train it using the pipeline *************************
 
 # For saved RESCAL model
-result = torch.load("../new_models/rotate_model.pth", map_location='cuda' if torch.cuda.is_available() else 'cpu')
+result = torch.load("../new_models/rotate_fbk_model.pth", map_location='cuda' if torch.cuda.is_available() else 'cpu')
 
 entity_embeddings = result.entity_representations[0](
     indices=None).cpu().detach().numpy()
@@ -307,8 +307,7 @@ for epoch in range(num_epochs):
     optimizer_g.step()
 
     # if epoch % 10 == 0:
-    #     print(
-    #         f"Epoch [{epoch}/{num_epochs}] | D Loss: {d_loss.item()} | G Loss: {g_loss.item()}")
+    #     print(f"Epoch [{epoch}/{num_epochs}] | D Loss: {d_loss.item()} | G Loss: {g_loss.item()}")
 
 
 # Convert neighborhood embeddings to tensor
@@ -442,7 +441,7 @@ for epoch in range(num_epochs):
     optimizer.step()
 
     # if (epoch + 1) % 20 == 0:
-    #     print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.4f}')
+        # print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.4f}')
 
 # Add new node and sparse node to the graph
 new_node_id = len(entities)  # New node index
